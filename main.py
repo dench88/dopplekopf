@@ -6,7 +6,8 @@ from agents import HumanAgent, RandomAgent, MinimaxAgent, ExpectiMaxAgent
 from determinized_mcts_agent import DeterminizedMCTSAgent
 
 agents = {
-    "RUSTY": HumanAgent(),
+    # "RUSTY": HumanAgent(),
+    # "ALICE": HumanAgent(),
     # "HARLEM": HumanAgent(),
     # "RUSTY": RandomAgent(),
     # "ALICE": RandomAgent(),
@@ -17,7 +18,7 @@ agents = {
     # "SUSIE": ExpectiMaxAgent("SUSIE", samples=5, depth=12),
     # "HARLEM": ExpectiMaxAgent("HARLEM", samples=5, depth=12),
     # "ALICE": ExpectiMaxAgent("ALICE", samples=5, depth=12),
-    # "RUSTY": ExpectiMaxAgent("RUSTY"),
+    "RUSTY": ExpectiMaxAgent("RUSTY"),
     "SUSIE": ExpectiMaxAgent("SUSIE"),
     "HARLEM": ExpectiMaxAgent("HARLEM"),
     "ALICE": ExpectiMaxAgent("ALICE"),
@@ -89,7 +90,7 @@ def play_game(state: GameState, render_func=None):
 
         action = agent.choose(state)
         hand = sorted(state.hands[current], key=lambda c: c.power)
-        print(f"{current} hand:", [card.identifier for card in hand])
+        print(f"       {current} hand:", [card.identifier for card in hand])
         if not isinstance(agent, HumanAgent):
             print(f"{current} played {action.identifier}")
 
@@ -97,15 +98,12 @@ def play_game(state: GameState, render_func=None):
         state = state.apply_action(action)
 
         # 2) **Immediate team switch on seeing a real Q-clubs**
+        # after applying the Q-club play...
         if action.identifier == 'Q-clubs':
-            for player_name, other_agent in agents.items():
-                # skip the leader and any agent without that helper
-                if player_name == current or not hasattr(other_agent, '_check_team_switch'):
-                    continue
-
-                # if they really hold the other Q-club in their *current* hand
-                if any(c.identifier == 'Q-clubs' for c in state.hands[player_name]):
-                    other_agent._check_team_switch(state)
+            for player_name, ag in agents.items():
+                if hasattr(ag, '_check_team_switch') \
+                        and any(c.identifier == 'Q-clubs' for c in state.hands[player_name]):
+                    ag._check_team_switch(state, force=True)
 
         # 3) Now check for trick completion
         if not state.current_trick:
@@ -150,6 +148,18 @@ if __name__ == "__main__":
     qc_pts    = sum(final_state.points[p] for p in qc_public)
     no_qc_pts = sum(final_state.points[p] for p in team_no_qc)
 
-    print(f"Team Q-clubs total points: {qc_pts}")
-    print(f"Team non-Q-clubs total points: {no_qc_pts}")
+    # figure out who the two Q-club holders are
+    qc_members = {
+        player
+        for trick in final_state.trick_history
+        for player, card in trick
+        if card.identifier == 'Q-clubs'
+    }
+    # the other two are the non-holders
+    non_qc_members = [p for p in constants.players if p not in qc_members]
+
+    # print with membership
+    print(f"Team Q-clubs ({', '.join(qc_members)}): Total points: {qc_pts}")
+    print(f"Team non-Q-clubs ({', '.join(non_qc_members)}): Total points: {no_qc_pts}")
+
 

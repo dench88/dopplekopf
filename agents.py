@@ -31,25 +31,30 @@ class MinimaxAgent:
         self.depth = depth
         self.is_team_playing = False  # add this line!
 
-    def _check_team_switch(self, state: GameState):
-        # only run at trick boundary
-        if state.current_trick:
+    def _check_team_switch(self, state: GameState, *, force=False):
+        # 1) pre‐trick boundary guard (unless forced)
+        if state.current_trick and not force:
             return
 
-        # who’s revealed Q-clubs?
-        qc_public = {
-            p for trick in state.trick_history
-            for p, card in trick
-            if card.identifier == 'Q-clubs'
-        }
-        qc_public |= {
-            p for p, card in state.current_trick
-            if card.identifier == 'Q-clubs'
+        # 2) who’s played a Q-club so far?
+        played = {
+                     p for trick in state.trick_history
+                     for p, card in trick
+                     if card.identifier == 'Q-clubs'
+                 } | {
+                     p for p, card in state.current_trick
+                     if card.identifier == 'Q-clubs'
+                 }
+
+        # 3) who still holds one in hand?
+        holders = {
+            p for p, h in state.hands.items()
+            if any(c.identifier == 'Q-clubs' for c in h)
         }
 
-        # determine if *I* know my team
-        knows_team = (self.name in qc_public) or (len(qc_public) == 2)
-        if knows_team and not self.is_team_playing:
+        # 4) if I’m a holder & at least one club played, or both clubs played
+        if ((self.name in holders and played) or len(played) == 2) \
+                and not self.is_team_playing:
             print(f"{self.name} now knows their team and switches to team play!")
             self.is_team_playing = True
 
@@ -126,25 +131,30 @@ class ExpectiMaxAgent:
         self.depth = depth
         self.is_team_playing = False  # initially selfish
 
-    def _check_team_switch(self, state: GameState):
-        # only run at trick boundary
-        if state.current_trick:
+    def _check_team_switch(self, state: GameState, *, force=False):
+        # 1) pre‐trick boundary guard (unless forced)
+        if state.current_trick and not force:
             return
 
-        # who’s revealed Q-clubs?
-        qc_public = {
-            p for trick in state.trick_history
-            for p, card in trick
-            if card.identifier == 'Q-clubs'
-        }
-        qc_public |= {
-            p for p, card in state.current_trick
-            if card.identifier == 'Q-clubs'
+        # 2) who’s played a Q-club so far?
+        played = {
+                     p for trick in state.trick_history
+                     for p, card in trick
+                     if card.identifier == 'Q-clubs'
+                 } | {
+                     p for p, card in state.current_trick
+                     if card.identifier == 'Q-clubs'
+                 }
+
+        # 3) who still holds one in hand?
+        holders = {
+            p for p, h in state.hands.items()
+            if any(c.identifier == 'Q-clubs' for c in h)
         }
 
-        # determine if *I* know my team
-        knows_team = (self.name in qc_public) or (len(qc_public) == 2)
-        if knows_team and not self.is_team_playing:
+        # 4) if I’m a holder & at least one club played, or both clubs played
+        if ((self.name in holders and played) or len(played) == 2) \
+                and not self.is_team_playing:
             print(f"{self.name} now knows their team and switches to team play!")
             self.is_team_playing = True
 
@@ -254,7 +264,7 @@ class ExpectiMaxAgent:
                         break
 
             avg_score = sum(scores) / len(scores)
-            tqdm.write(f"Avg score for {action.identifier}: {avg_score:.2f}")
+            tqdm.write(f"         Avg score for {action.identifier}: {avg_score:.2f}")
 
             if avg_score > best_score:
                 best_score, best_moves = avg_score, [action]
