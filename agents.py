@@ -64,21 +64,40 @@ class MinimaxAgent:
             if not state.current_trick:
                 self._check_team_switch(state)
 
-            # Duck any losing trump trick (power ≤ current, prefer ≤9 pts)
-            if state.current_trick:
-                lead_cat = state.current_trick[0][1].category
-                if lead_cat == "trumps" and all(c.category == "trumps" for c in legal):
-                    current_win = max(card.power for _, card in state.current_trick)
-                    losers = [c for c in legal if c.power <= current_win]
-                    if losers:
-                        losers.sort(key=lambda c: c.power)
-                        # pick first with pts ≤ 9
-                        duck = next((c for c in losers if c.points <= 9), losers[0])
-                        print(f"{self.name} ducks with {duck.identifier} (losing trick cheaply)")
-                        return duck
-
             if len(legal) == 1:
                 return legal[0]
+
+            if state.current_trick:
+                # 1) who’s winning so far?
+                winner, winning_card = max(state.current_trick, key=lambda pc: pc[1].power)
+
+                # 2) legal set & which of mine would lose
+                # legal = state.legal_actions()
+                losing = [c for c in legal if c.power <= winning_card.power]
+                if losing and len(losing) == len(legal):
+                    # 3) figure out if winner is on my team
+                    qc_public = {
+                                    p for trick in state.trick_history for p, c in trick
+                                    if c.identifier == 'Q-clubs'
+                                } | {
+                                    p for p, c in state.current_trick if c.identifier == 'Q-clubs'
+                                }
+                    if self.name in qc_public or len(qc_public) == 2:
+                        qc_public |= {
+                            p for p, h in state.hands.items()
+                            if any(c.identifier == 'Q-clubs' for c in h)
+                        }
+                    partner_wins = (winner in qc_public) == (self.name in qc_public)
+
+                    if partner_wins:
+                        # feed partner: throw highest-point loser
+                        duck = max(losing, key=lambda c: (c.points, c.power))
+                        print(f"{self.name} feeds partner by playing {duck.identifier}")
+                    else:
+                        # standard duck: lowest-point loser
+                        duck = min(losing, key=lambda c: (c.points, c.power))
+                        print(f"{self.name} ducks with {duck.identifier} (no chance to win)")
+                    return duck
 
             # Determine search depth: finish current trick if not specified
             if self.depth is None:
@@ -158,120 +177,95 @@ class ExpectiMaxAgent:
             print(f"{self.name} now knows their team and switches to team play!")
             self.is_team_playing = True
 
+
     def choose(self, state: GameState) -> Card:
         legal = state.legal_actions()
-        # only check at the start of a trick
+        # team-check at trick start
         if not state.current_trick:
             self._check_team_switch(state)
 
-        # 1. Only one move? Just play it.
+        # 1. single move trivial
         if len(legal) == 1:
             print(f"{self.name} has only one move: {legal[0].identifier}")
             return legal[0]
 
-        # 2. First move of game? Try fast heuristic
-        if len(state.trick_history) == 0 and len(state.current_trick) == 0:
+        # 2. fast heuristic for first trick
+        if not state.trick_history and not state.current_trick:
             hand = list(state.hands[state.next_player])
-
-            # Priority 1: A-spades or A-clubs
-            acards = [c for c in hand if c.identifier in ("A-spades", "A-clubs")]
+            acards = [c for c in hand if c.identifier in ("A-spades","A-clubs")]
             if acards:
-                spades = [c for c in hand if c.category == "spades" and c.identifier not in constants.trumps]
-                clubs = [c for c in hand if c.category == "clubs" and c.identifier not in constants.trumps]
-                if len(spades) <= len(clubs):
+                spades = [c for c in hand if c.category=="spades" and c.identifier not in constants.trumps]
+                clubs  = [c for c in hand if c.category=="clubs"  and c.identifier not in constants.trumps]
+                if len(spades)<=len(clubs):
                     for c in acards:
-                        if c.category == "spades":
+                        if c.category=="spades":
                             print(f"{self.name} used fast rule: A-spades")
                             return c
                 for c in acards:
-                    if c.category == "clubs":
+                    if c.category=="clubs":
                         print(f"{self.name} used fast rule: A-clubs")
                         return c
-
-            # Priority 2: A-hearts and few hearts
-            a_hearts = [c for c in hand if c.identifier == "A-hearts"]
-            colour_hearts = [c for c in hand if c.category == "hearts" and c.identifier not in constants.trumps]
-            if a_hearts and len(colour_hearts) <= 2:
+            a_hearts = [c for c in hand if c.identifier=="A-hearts"]
+            colour_hearts = [c for c in hand if c.category=="hearts" and c.identifier not in constants.trumps]
+            if a_hearts and len(colour_hearts)<=2:
                 print(f"{self.name} used fast rule: A-hearts")
                 return a_hearts[0]
-
-            # Priority 3: 3–5 J/Q
-            jq = [c for c in hand if c.type in ("J", "Q")]
-            if 3 <= len(jq) <= 5:
-                jq_sorted = sorted(jq, key=lambda c: c.power, reverse=True)
+            jq = [c for c in hand if c.type in ("J","Q")]
+            if 3<=len(jq)<=5:
+                sorted_jq = sorted(jq, key=lambda c:c.power, reverse=True)
                 print(f"{self.name} used fast rule: Holds 3–5 Js or Qs")
-                return jq_sorted[2]
-
-            # Priority 4: exactly 2 J/Q
-            if len(jq) == 2:
-                jq_sorted = sorted(jq, key=lambda c: c.power, reverse=True)
+                return sorted_jq[2]
+            if len(jq)==2:
+                sorted_jq = sorted(jq, key=lambda c:c.power, reverse=True)
                 print(f"{self.name} used fast rule: 2 JQ")
-                return jq_sorted[1]
+                return sorted_jq[1]
 
-            # Duck any losing trump trick (power ≤ current, prefer ≤9 pts)
-            if state.current_trick:
-                lead_cat = state.current_trick[0][1].category
-                legal = state.legal_actions()
-                if lead_cat == "trumps" and all(c.category == "trumps" for c in legal):
-                    current_win = max(card.power for _, card in state.current_trick)
-                    losers = [c for c in legal if c.power <= current_win]
-                    if losers:
-                        losers.sort(key=lambda c: c.power)
-                        # pick first with pts ≤ 9
-                        duck = next((c for c in losers if c.points <= 9), losers[0])
-                        print(f"{self.name} ducks with {duck.identifier} (losing trick cheaply)")
-                        return duck
+        # 3. duck/feed logic: if I cannot win mid-trick
+        if state.current_trick:
+            winner, winning_card = max(state.current_trick, key=lambda pc: pc[1].power)
+            losing = [c for c in legal if c.power <= winning_card.power]
+            if losing and len(losing) == len(legal):
+                qc_public = {
+                    p for trick in state.trick_history for p, c in trick
+                    if c.identifier == 'Q-clubs'
+                } | {
+                    p for p, c in state.current_trick if c.identifier == 'Q-clubs'
+                }
+                if self.is_team_playing or len(qc_public) == 2:
+                    qc_public |= {
+                        p for p, h in state.hands.items()
+                        if any(c.identifier == 'Q-clubs' for c in h)
+                    }
+                feed = self.is_team_playing and ((winner in qc_public) == (self.name in qc_public))
+                if feed:
+                    duck = max(losing, key=lambda c: (c.points, c.power))
+                    print(f"{self.name} feeds partner by playing {duck.identifier}")
+                else:
+                    duck = min(losing, key=lambda c: (c.points, c.power))
+                    print(f"{self.name} ducks with {duck.identifier} (no chance to win)")
+                return duck
 
-        # 3. Dynamic depth and sample control
-        tricks_played = len(state.trick_history)
-        if self.depth is not None:
-            depth = self.depth
-            samples = self.samples
-        else:
-            if tricks_played < 4:
-                depth = 6
-                samples = 20
-            elif tricks_played < 8:
-                depth = 8
-                samples = 12
-            else:
-                depth = 10
-                samples = 8
-
-        # 4. Full Expectimax with sampling
-
-        self.is_sampling = True
-
-        best_moves = []
-        best_score = -math.inf
-        actions = state.legal_actions()
-
-        self.is_sampling = True
-        for action in tqdm(actions, desc="Root actions", leave=True, disable=True):
-            scores = []
-            for sample_idx in range(self.samples):
-                sampled_state = self._sample_hidden(state)
-                next_state = sampled_state.apply_action(action)
-                _, score = MinimaxAgent(self.name, depth)._minimax(
-                    next_state, depth, True, -math.inf, math.inf
+        # 4. sample+minimax
+        players = list(constants.players.keys())
+        remaining = len(players) - len(state.current_trick)
+        depth = self.depth if self.depth is not None else remaining
+        best_moves, best_score = [], -math.inf
+        for action in tqdm(state.legal_actions(), desc="Root actions", leave=True, disable=True):
+            scores=[]
+            for i in range(self.samples):
+                sampled = self._sample_hidden(state)
+                _, sc = MinimaxAgent(self.name, depth)._minimax(
+                    sampled.apply_action(action), depth, True, -math.inf, math.inf
                 )
-                scores.append(score)
-
-                # ✅ Early stopping
-                if sample_idx >= 5:
-                    running_avg = sum(scores) / len(scores)
-                    if running_avg < best_score - 10:
-                        break
-
-            avg_score = sum(scores) / len(scores)
-            tqdm.write(f"         Avg score for {action.identifier}: {avg_score:.2f}")
-
-            if avg_score > best_score:
-                best_score, best_moves = avg_score, [action]
-            elif avg_score == best_score:
+                scores.append(sc)
+                if i>=5 and sum(scores)/len(scores) < best_score-10:
+                    break
+            avg = sum(scores)/len(scores)
+            tqdm.write(f"Avg score for {action.identifier}: {avg:.2f}")
+            if avg>best_score:
+                best_score, best_moves = avg, [action]
+            elif avg==best_score:
                 best_moves.append(action)
-        self.is_sampling = False
-
         return random.choice(best_moves)
 
     def _sample_hidden(self, state: GameState) -> GameState:

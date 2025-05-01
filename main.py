@@ -36,19 +36,20 @@ def find_first_player():
 
 
 def make_initial_state():
-    repeat = True
-    hands = {p: [] for p in constants.players}
-    while repeat:
+    while True:
+        hands = {player: [] for player in constants.players}
         deck = create_deck()
-        for p in hands:
-            hands[p].clear()
-        for player in constants.players:
-            for _ in range(12):
-                hands[player].append(deck.pop())
-            if sum(1 for c in hands[player] if c.category == 'trumps') > 2:
-                repeat = False
-    frozen_hands = {p: tuple(cards) for p, cards in hands.items()}
+        for player in hands:
+            hands[player] = [deck.pop() for _ in range(12)]
+        # Check that all player hands have more than 2 trumps
+        if all(sum(1 for card in hand if card.category == 'trumps') > 2 for hand in hands.values()):
+            break  # Exit loop only if condition is met
+
+    # Convert hands to immutable form (tuples)
+    frozen_hands = {player: tuple(hand) for player, hand in hands.items()}
+    # Determine who goes first
     first = find_first_player()
+    # Create and return the initial game state
     return GameState(hands=frozen_hands, next_player=first)
 
 
