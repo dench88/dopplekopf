@@ -32,30 +32,48 @@ class MinimaxAgent:
         self.is_team_playing = False  # add this line!
 
     def _check_team_switch(self, state: GameState, *, force=False):
-        # 1) pre‐trick boundary guard (unless forced)
+        # 1) Pre-trick boundary guard (unless forced)
         if state.current_trick and not force:
             return
 
-        # 2) who’s played a Q-club so far?
+        # 2) Who’s played a Q-club so far?
         played = {
-                     p for trick in state.trick_history
-                     for p, card in trick
+                     p for trick in state.trick_history for p, card in trick
                      if card.identifier == 'Q-clubs'
                  } | {
-                     p for p, card in state.current_trick
-                     if card.identifier == 'Q-clubs'
+                     p for p, card in state.current_trick if card.identifier == 'Q-clubs'
                  }
 
-        # 3) who still holds one in hand?
+        # 3) Who still holds one in hand?
         holders = {
             p for p, h in state.hands.items()
             if any(c.identifier == 'Q-clubs' for c in h)
         }
 
-        # 4) if I’m a holder & at least one club played, or both clubs played
-        if ((self.name in holders and played) or len(played) == 2) \
-                and not self.is_team_playing:
-            print(f"{self.name} now knows their team and switches to team play!")
+        # 4) Should I switch now?
+        first_club = (len(played) == 1 and self.name in holders)
+        second_club = (len(played) == 2)
+
+        if (first_club or second_club) and not self.is_team_playing:
+            # Build the full team set
+            qc_public = set(played)
+            if second_club or self.name in holders:
+                # now reveal both holders
+                qc_public |= {
+                    p for p, h in state.hands.items()
+                    if any(c.identifier == 'Q-clubs' for c in h)
+                }
+
+            # Your team is qc_public if you’re in it, else the complement
+            if self.name in qc_public:
+                team = qc_public
+            else:
+                team = set(state.hands.keys()) - qc_public
+
+            partners = sorted(team - {self.name})
+            partner_str = ", ".join(partners)
+
+            print(f"{self.name} now knows their team (with {partner_str}) and switches to team play!")
             self.is_team_playing = True
 
     def choose(self, state: GameState) -> Card:
@@ -151,32 +169,49 @@ class ExpectiMaxAgent:
         self.is_team_playing = False  # initially selfish
 
     def _check_team_switch(self, state: GameState, *, force=False):
-        # 1) pre‐trick boundary guard (unless forced)
+        # 1) Pre-trick boundary guard (unless forced)
         if state.current_trick and not force:
             return
 
-        # 2) who’s played a Q-club so far?
+        # 2) Who’s played a Q-club so far?
         played = {
-                     p for trick in state.trick_history
-                     for p, card in trick
+                     p for trick in state.trick_history for p, card in trick
                      if card.identifier == 'Q-clubs'
                  } | {
-                     p for p, card in state.current_trick
-                     if card.identifier == 'Q-clubs'
+                     p for p, card in state.current_trick if card.identifier == 'Q-clubs'
                  }
 
-        # 3) who still holds one in hand?
+        # 3) Who still holds one in hand?
         holders = {
             p for p, h in state.hands.items()
             if any(c.identifier == 'Q-clubs' for c in h)
         }
 
-        # 4) if I’m a holder & at least one club played, or both clubs played
-        if ((self.name in holders and played) or len(played) == 2) \
-                and not self.is_team_playing:
-            print(f"{self.name} now knows their team and switches to team play!")
-            self.is_team_playing = True
+        # 4) Should I switch now?
+        first_club = (len(played) == 1 and self.name in holders)
+        second_club = (len(played) == 2)
 
+        if (first_club or second_club) and not self.is_team_playing:
+            # Build the full team set
+            qc_public = set(played)
+            if second_club or self.name in holders:
+                # now reveal both holders
+                qc_public |= {
+                    p for p, h in state.hands.items()
+                    if any(c.identifier == 'Q-clubs' for c in h)
+                }
+
+            # Your team is qc_public if you’re in it, else the complement
+            if self.name in qc_public:
+                team = qc_public
+            else:
+                team = set(state.hands.keys()) - qc_public
+
+            partners = sorted(team - {self.name})
+            partner_str = ", ".join(partners)
+
+            print(f"{self.name} now knows their team (with {partner_str}) and switches to team play!")
+            self.is_team_playing = True
 
     def choose(self, state: GameState) -> Card:
         legal = state.legal_actions()
@@ -261,7 +296,7 @@ class ExpectiMaxAgent:
                 if i>=5 and sum(scores)/len(scores) < best_score-10:
                     break
             avg = sum(scores)/len(scores)
-            tqdm.write(f"Avg score for {action.identifier}: {avg:.2f}")
+            tqdm.write(f"    Avg score for {action.identifier}: {avg:.2f}")
             if avg>best_score:
                 best_score, best_moves = avg, [action]
             elif avg==best_score:

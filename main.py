@@ -6,7 +6,7 @@ from agents import HumanAgent, RandomAgent, MinimaxAgent, ExpectiMaxAgent
 from determinized_mcts_agent import DeterminizedMCTSAgent
 
 agents = {
-    # "RUSTY": HumanAgent(),
+    "RUSTY": HumanAgent(),
     # "ALICE": HumanAgent(),
     # "HARLEM": HumanAgent(),
     # "RUSTY": RandomAgent(),
@@ -18,9 +18,10 @@ agents = {
     # "SUSIE": ExpectiMaxAgent("SUSIE", samples=5, depth=12),
     # "HARLEM": ExpectiMaxAgent("HARLEM", samples=5, depth=12),
     # "ALICE": ExpectiMaxAgent("ALICE", samples=5, depth=12),
-    "RUSTY": ExpectiMaxAgent("RUSTY"),
+    # "RUSTY": ExpectiMaxAgent("RUSTY"),
     "SUSIE": ExpectiMaxAgent("SUSIE"),
     "HARLEM": ExpectiMaxAgent("HARLEM"),
+    # "HARLEM": ExpectiMaxAgent("HARLEM", samples=20, depth=8),
     "ALICE": ExpectiMaxAgent("ALICE"),
     # "HARLEM": DeterminizedMCTSAgent("HARLEM", simulations=1500),
     # "SUSIE": MinimaxAgent("SUSIE", depth=5),
@@ -98,13 +99,30 @@ def play_game(state: GameState, render_func=None):
         # 1) Apply the play
         state = state.apply_action(action)
 
-        # 2) **Immediate team switch on seeing a real Q-clubs**
-        # after applying the Q-club play...
+        # 2) Immediate team‐switch logic on Q-clubs
         if action.identifier == 'Q-clubs':
-            for player_name, ag in agents.items():
-                if hasattr(ag, '_check_team_switch') \
-                        and any(c.identifier == 'Q-clubs' for c in state.hands[player_name]):
-                    ag._check_team_switch(state, force=True)
+            # who’s already played a Q-club (public set)
+            played = {
+                         p
+                         for trick in state.trick_history
+                         for p, c in trick
+                         if c.identifier == 'Q-clubs'
+                     } | {
+                         p for p, c in state.current_trick if c.identifier == 'Q-clubs'
+                     }
+
+            if len(played) == 1:
+                # first club → only holders learn
+                for name, ag in agents.items():
+                    if hasattr(ag, '_check_team_switch') \
+                            and any(c.identifier == 'Q-clubs' for c in state.hands[name]):
+                        ag._check_team_switch(state, force=True)
+
+            elif len(played) == 2:
+                # second club → everyone learns
+                for ag in agents.values():
+                    if hasattr(ag, '_check_team_switch'):
+                        ag._check_team_switch(state, force=True)
 
         # 3) Now check for trick completion
         if not state.current_trick:
