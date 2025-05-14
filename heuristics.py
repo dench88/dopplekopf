@@ -55,6 +55,34 @@ def evaluate(state: GameState, me: str, agent=None) -> float:
         loss_penalty = base_factor * scale * last_card.power
         base_score -= loss_penalty
 
+    # Optional penalty for weak 10-hearts leads
+    # printed_penalty = False
+    if agent and getattr(agent, "is_sampling", False) is False:
+        if state.trick_history:
+            last_trick = state.trick_history[-1]
+
+            # Only consider if agent played last
+            if last_trick[-1][0] == agent.name:
+                last_card = last_trick[-1][1]
+                if last_card.identifier == "10-hearts":
+                    trick_pts = sum(c.points for _, c in last_trick)
+                    base_score_before = base_score
+                    base_score -= 30  # or 100, or conditional
+                    print(
+                        f"10-hearts penalty applied to {agent.name}: trick had {trick_pts} pts | score {base_score_before:.2f} -> {base_score:.2f}")
+
+                    # printed_penalty = True
+                    # break
+
+    # if agent and getattr(agent, "is_sampling", False) is False:
+    #     if state.trick_history:
+    #         last_trick = state.trick_history[-1]
+    #         for player, card in reversed(last_trick):
+    #             if player == agent.name and card.identifier == "10-hearts":
+    #                 base_score -= 60  # blanket penalty for using 10-hearts
+    #                 break
+
+
     return base_score
 
 

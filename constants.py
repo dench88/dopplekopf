@@ -33,8 +33,8 @@ trick_category = {'9-hearts': 'hearts', '9-spades': 'spades', '9-clubs': 'clubs'
                   }
 colour_cards = list(set(cards_power) - set(trumps))
 
-players = {"RUSTY": [], "ALICE": [], "SUSIE": [], "HARLEM": []}
+players = {"RUSTY": [], "SUSIE": [], "HARLEM": [], "ALICE": []}
 
-player_points = {"RUSTY": 0, "ALICE": 0, "SUSIE": 0, "HARLEM": 0}
+player_points = {"RUSTY": 0, "SUSIE": 0, "HARLEM": 0, "ALICE": 0}
 
 # print(colour_cards)

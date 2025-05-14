@@ -4,9 +4,11 @@ from game_state import GameState
 import constants
 from agents import HumanAgent, RandomAgent, MinimaxAgent, ExpectiMaxAgent
 from determinized_mcts_agent import DeterminizedMCTSAgent
+import time
+
 
 agents = {
-    "RUSTY": HumanAgent(),
+    # "RUSTY": HumanAgent(),
     # "ALICE": HumanAgent(),
     # "HARLEM": HumanAgent(),
     # "RUSTY": RandomAgent(),
@@ -18,10 +20,10 @@ agents = {
     # "SUSIE": ExpectiMaxAgent("SUSIE", samples=5, depth=12),
     # "HARLEM": ExpectiMaxAgent("HARLEM", samples=5, depth=12),
     # "ALICE": ExpectiMaxAgent("ALICE", samples=5, depth=12),
-    # "RUSTY": ExpectiMaxAgent("RUSTY"),
+    "RUSTY": ExpectiMaxAgent("RUSTY"),
     "SUSIE": ExpectiMaxAgent("SUSIE"),
     "HARLEM": ExpectiMaxAgent("HARLEM"),
-    # "HARLEM": ExpectiMaxAgent("HARLEM", samples=20, depth=8),
+    # "HARLEM": ExpectiMaxAgent("HARLEM", samples=10, depth=8),
     "ALICE": ExpectiMaxAgent("ALICE"),
     # "HARLEM": DeterminizedMCTSAgent("HARLEM", simulations=1500),
     # "SUSIE": MinimaxAgent("SUSIE", depth=5),
@@ -149,8 +151,17 @@ if __name__ == "__main__":
         sorted_ids = [c.identifier for c in sorted(hand, key=lambda c: c.power)]
         print(f"  {player}: {sorted_ids}")
     print("====================================================")
+    # Start timer
+    start = time.time()
+
     final_state = play_game(state, render)
     print("\nGame over! Final points:", final_state.points)
+    # End timer
+    end = time.time()
+    print(f"\nGame runtime: {end - start:.2f} seconds")
+
+    print("\nGame over! Final points:", final_state.points)
+
     # After printing final_state.points:
     # Compute team totals from the completed tricks
     qc_public = [
@@ -181,4 +192,8 @@ if __name__ == "__main__":
     print(f"Team Q-clubs ({', '.join(qc_members)}): Total points: {qc_pts}")
     print(f"Team non-Q-clubs ({', '.join(non_qc_members)}): Total points: {no_qc_pts}")
 
+    print("\nGame summary:")
+    for i, trick in enumerate(final_state.trick_history, 1):
+        trick_summary = {player: card.identifier for player, card in trick}
+        print(f"Trick {i}: {trick_summary}")
 

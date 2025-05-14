@@ -159,10 +159,10 @@ class MinimaxAgent:
 
 class ExpectiMaxAgent:
     """
-    Sampling-based imperfect-information agent: for each candidate move, samples 20 possible hypothetical deals
+    Sampling-based imperfect-information agent: for each candidate move, samples 10 possible hypothetical deals
     and runs a depth-limited perfect-information minimax, averaging scores to pick the best.
     """
-    def __init__(self, name: str, samples: int = 20, depth: int = None):
+    def __init__(self, name: str, samples: int = 10, depth: int = None):
         self.name = name
         self.samples = samples
         self.depth = depth
@@ -285,7 +285,14 @@ class ExpectiMaxAgent:
         remaining = len(players) - len(state.current_trick)
         depth = self.depth if self.depth is not None else remaining
         best_moves, best_score = [], -math.inf
+        # for action in tqdm(state.legal_actions(), desc="Root actions", leave=True, disable=True):
+        # replace with below to stop evaluating same card twice
+        seen = set()
         for action in tqdm(state.legal_actions(), desc="Root actions", leave=True, disable=True):
+            if action.identifier in seen:
+                continue  # Skip duplicate card evaluations
+            seen.add(action.identifier)
+
             scores=[]
             for i in range(self.samples):
                 sampled = self._sample_hidden(state)
@@ -296,11 +303,18 @@ class ExpectiMaxAgent:
                 if i>=5 and sum(scores)/len(scores) < best_score-10:
                     break
             avg = sum(scores)/len(scores)
+            # Inferior way to appl  y cost to 10-he
+            # if action.identifier == "10-hearts" and avg < 25:
+            #     avg -= 100  # discourage low-value 10-hearts
+
             tqdm.write(f"    Avg score for {action.identifier}: {avg:.2f}")
             if avg>best_score:
                 best_score, best_moves = avg, [action]
             elif avg==best_score:
                 best_moves.append(action)
+
+
+
         return random.choice(best_moves)
 
     def _sample_hidden(self, state: GameState) -> GameState:
