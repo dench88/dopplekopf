@@ -32,6 +32,7 @@ def card_strength(card: Card, trick_suit: str) -> int:
     return -1
 
 
+
 class DuckFeedMixin:
     """
     Shared logic for mid-trick duck/feed decision, plus team-aware last-player override.
@@ -43,61 +44,56 @@ class DuckFeedMixin:
         qc_public |= {p for p, c in state.current_trick if c.identifier == 'Q-clubs'}
         if self.is_team_playing or len(qc_public) == 2:
             qc_public |= {p for p, h in state.hands.items() if any(c.identifier == 'Q-clubs' for c in h)}
-        # mid-trick leader
-        current_winner, current_card = (None, None)
+        
+        # mid-trick strength tracking
+        trick_suit = None
+        current_winner = None
+        current_strength = -1
         if state.current_trick:
+            trick_suit = state.current_trick[0][1].category
             current_winner, current_card = max(state.current_trick, key=lambda pc: pc[1].power)
-            trick_suit = state.current_trick[0][1].category
             current_strength = card_strength(current_card, trick_suit)
-        # last-player override
-        if len(state.current_trick) == num_players - 1 and self.is_team_playing:
-            trick_suit = state.current_trick[0][1].category
-            # candidates that can win
+        
+        # last-player override: feed or win
+        if state.current_trick and len(state.current_trick) == num_players - 1 and self.is_team_playing:
             winners = [c for c in legal if card_strength(c, trick_suit) > current_strength]
-            losers = [c for c in legal if card_strength(c, trick_suit) <= current_strength]
+            losers  = [c for c in legal if card_strength(c, trick_suit) <= current_strength]
             partner_wins = ((current_winner in qc_public) == (self.name in qc_public))
             if winners:
-                # if partner already winning, feed partner by throwing high points
                 if partner_wins:
                     pool = [c for c in losers if c.identifier != '10-hearts'] or losers
                     choice = max(pool, key=lambda c: (c.points, c.power))
                     print(f"{self.name} (last-player) partner winning, feed with {choice.identifier}")
                     return choice
-                # otherwise win with high point card
                 pool = [c for c in winners if c.identifier != '10-hearts'] or winners
                 choice = max(pool, key=lambda c: (c.points, c.power))
                 print(f"{self.name} (last-player) win trick with {choice.identifier}")
                 return choice
-            # no winners: if partner winning, throw highest loser, else lowest
             if partner_wins:
                 pool = [c for c in losers if c.identifier != '10-hearts'] or losers
                 choice = max(pool, key=lambda c: (c.points, c.power))
                 print(f"{self.name} (last-player) partner winning, feed with {choice.identifier}")
                 return choice
-            # standard duck cheaply
             choice = min(losers, key=lambda c: (c.points, c.power))
-            print(f"{self.name} (last-player) can't win so duck cheaply with {choice.identifier}")
+            print(f"{self.name} (last-player) duck cheaply with {choice.identifier}")
             return choice
 
-        # -- Mid-trick duck logic when no chance to win --
-        if not state.current_trick:
-            return None
-        trick_suit = state.current_trick[0][1].category
-        winner, win_card = max(state.current_trick, key=lambda pc: pc[1].power)
-        strength_win = card_strength(win_card, trick_suit)
-        losers = [c for c in legal if card_strength(c, trick_suit) <= strength_win]
-        if len(losers) != len(legal):
-            return None  # can win, defer to search
-        partner_wins = ((winner in qc_public) == (self.name in qc_public))
-        if partner_wins and self.is_team_playing:
-            pool = [c for c in losers if c.identifier != '10-hearts'] or losers
-            choice = max(pool, key=lambda c: (c.points, c.power))
-            print(f"{self.name} mid-trick: partner winning, feed with {choice.identifier}")
-            return choice
-        # otherwise standard duck cheaply
-        choice = min(losers, key=lambda c: (c.points, c.power))
-        print(f"{self.name} mid-trick: duck cheaply with {choice.identifier}")
-        return choice
+        # mid-trick duck if cannot win
+        if state.current_trick:
+            winners = [c for c in legal if card_strength(c, trick_suit) > current_strength]
+            if not winners:
+                losers = [c for c in legal if card_strength(c, trick_suit) <= current_strength]
+                partner_wins = ((current_winner in qc_public) == (self.name in qc_public))
+                if partner_wins and self.is_team_playing:
+                    pool = [c for c in losers if c.identifier != '10-hearts'] or losers
+                    choice = max(pool, key=lambda c: (c.points, c.power))
+                    print(f"{self.name} mid-trick: partner winning, feed with {choice.identifier}")
+                    return choice
+                choice = min(losers, key=lambda c: (c.points, c.power))
+                print(f"{self.name} mid-trick: duck cheaply with {choice.identifier}")
+                return choice
+        return None
+
 
 
 
@@ -159,31 +155,17 @@ class MinimaxAgent(DuckFeedMixin):
 
     def choose(self, state: GameState) -> Card:
         legal = state.legal_actions()
-        # only check at the start of a trick
-        if not state.current_trick:
+        # team switch before any pick if start of trick
+        if not state.current_trick and hasattr(self, '_check_team_switch'):
             self._check_team_switch(state)
-
-        if len(legal) == 1:
-            return legal[0]
         # duck/feed override
-        card = self._duck_or_feed(state, legal)
-        if card:
-            return card
-
-        # **ensure we search to the end of this trick**
-        players   = list(constants.players.keys())
-        remaining = len(players) - len(state.current_trick)
-
-        if self.depth is None:
-            depth = remaining
-        else:
-            # bump up user‐requested depth if it’s too small
-            depth = max(self.depth, remaining)
-
-        best_move, _ = self._minimax(state, depth, True, -math.inf, math.inf)
-        # print(f"    [DEBUG] {self.name} final choice: {best_move.identifier}")
-
-        return best_move
+        choice = self._duck_or_feed(state, legal)
+        if choice:
+            return choice
+        # minimax search reach end of current trick by default
+        depth = self.depth if self.depth is not None else (len(constants.players) - len(state.current_trick))
+        move, _ = self._minimax(state, depth, True, -math.inf, math.inf)
+        return move
 
 
     def _minimax(self, state: GameState, depth: int, maximizing: bool,
@@ -273,96 +255,37 @@ class ExpectiMaxAgent(DuckFeedMixin):
 
     def choose(self, state: GameState) -> Card:
         legal = state.legal_actions()
-        # team-check at trick start
+        # team switch at trick start
         if not state.current_trick:
             self._check_team_switch(state)
-        # 1. single move trivial
-        if len(legal) == 1:
-            print(f"{self.name} has only one move: {legal[0].identifier}")
-            return legal[0]
-        # 2. fast heuristic for first trick
-        if not state.trick_history and not state.current_trick:
-            hand = list(state.hands[state.next_player])
-            acards = [c for c in hand if c.identifier in ("A-spades","A-clubs")]
-            if acards:
-                spades = [c for c in hand if c.category=="spades" and c.identifier not in constants.trumps]
-                clubs  = [c for c in hand if c.category=="clubs"  and c.identifier not in constants.trumps]
-                if len(spades)<=len(clubs):
-                    for c in acards:
-                        if c.category=="spades":
-                            print(f"{self.name} used fast rule: A-spades")
-                            return c
-                for c in acards:
-                    if c.category=="clubs":
-                        print(f"{self.name} used fast rule: A-clubs")
-                        return c
-            a_hearts = [c for c in hand if c.identifier=="A-hearts"]
-            colour_hearts = [c for c in hand if c.category=="hearts" and c.identifier not in constants.trumps]
-            if a_hearts and len(colour_hearts)<=2:
-                print(f"{self.name} used fast rule: A-hearts")
-                return a_hearts[0]
-            jq = [c for c in hand if c.type in ("J","Q")]
-            if 3<=len(jq)<=5:
-                sorted_jq = sorted(jq, key=lambda c:c.power, reverse=True)
-                print(f"{self.name} used fast rule: Holds 3–5 Js or Qs")
-                return sorted_jq[2]
-            if len(jq)==2:
-                sorted_jq = sorted(jq, key=lambda c:c.power, reverse=True)
-                print(f"{self.name} used fast rule: 2 JQ")
-                return sorted_jq[1]
-
         # duck/feed override
-        card = self._duck_or_feed(state, legal)
-        if card:
-            return card
-
-        # 4. sample+minimax
-        players = list(constants.players.keys())
-        remaining = len(players) - len(state.current_trick)
-        depth = self.depth if self.depth is not None else remaining
+        choice = self._duck_or_feed(state, legal)
+        if choice:
+            return choice
+        # sampling + minimax
+        depth = self.depth if self.depth is not None else (len(constants.players) - len(state.current_trick))
         best_moves, best_score = [], -math.inf
-
         seen = set()
-        # for action in tqdm(state.legal_actions(), desc="Root actions", leave=True, disable=True):
-        for action in state.legal_actions():
+        for action in tqdm(state.legal_actions(), desc="Root actions", leave=True, disable=True):
             if action.identifier in seen:
-                continue  # Skip duplicate card evaluations
+                continue
             seen.add(action.identifier)
-            scores=[]
-            samples_used = 0
-
-            for i in range(self.samples):
-                samples_used = i + 1
-                sampled = self._sample_hidden(state)
-
+            scores = []
+            for _ in range(self.samples):
+                sampled_state = self._sample_hidden(state)
                 _, sc = MinimaxAgent(self.name, depth)._minimax(
-                    sampled.apply_action(action), depth, True, -math.inf, math.inf
+                    sampled_state.apply_action(action), depth, True, -math.inf, math.inf
                 )
-
                 scores.append(sc)
-                if i>=5 and sum(scores)/len(scores) < best_score-10:
-                    break
-            avg = sum(scores)/len(scores)
-
-            tqdm.write(f"  → {action.identifier}: used {samples_used}/{self.samples} samples, avg {avg:.2f}")
-
-            if avg>best_score:
+            avg = sum(scores) / len(scores)
+            tqdm.write(f"  → {action.identifier}: used {len(scores)}/{self.samples} samples, avg {avg:.2f}")
+            if avg > best_score:
                 best_score, best_moves = avg, [action]
-            elif avg==best_score:
+            elif avg == best_score:
                 best_moves.append(action)
-
-        self.is_final_choice = True
-        if best_moves:
-            final_action = random.choice(best_moves)
-        else:
-            print("    WARNING: No best move found, defaulting to random choice.")
-            final_action = random.choice(state.legal_actions())
-        self.is_final_choice = False
-        # print(f"    [DEBUG] {self.name} final choice: {final_action.identifier}")
-
-        return final_action
-
-        # return random.choice(best_moves)
+        final_choice = random.choice(best_moves)
+        print(f"[INFO] Final choice: {final_choice.identifier}")
+        return final_choice
 
     def _sample_hidden(self, state: GameState) -> GameState:
         # Gather known identifiers: played cards + my hand
