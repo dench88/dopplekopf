@@ -68,7 +68,6 @@ class GameState:
             # pick the trick-winner by adjusted strength
             winner, winning_card = max(new_current, key=strength)
 
-
             # sum trick points
             trick_pts = sum(c.points for _, c in new_current)
             new_points[winner] += trick_pts

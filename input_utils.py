@@ -3,7 +3,7 @@ import time
 from typing import List, Optional
 from form_deck import Card
 
-def play_logic(player_hand: List[Card], trick_type: Optional[str]) -> Card:
+def human_play_logic(player_hand: List[Card], trick_type: Optional[str]) -> Card:
     """
     Prompt the human player to choose a card.
     - Follows suit if possible
@@ -24,13 +24,6 @@ def play_logic(player_hand: List[Card], trick_type: Optional[str]) -> Card:
             print(f"\nOnly one card you can play: {must_play.identifier}\n")
             time.sleep(2)
             return must_play
-
-        # # 3) Show the options
-        # print("\nPlayable cards:")
-        # if trick_type is None or playable == player_hand:
-        #     print("Any card...")
-        # else:
-        #     print("; ".join(c.identifier for c in playable))
 
         # 4) Ask for your choice
         choice = input("\nWhat card do you play? ").strip().lower()
