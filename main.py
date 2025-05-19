@@ -77,7 +77,7 @@ def render(state, last_trick):
         cards = [card.identifier for _, card in state.current_trick]
         print("Current trick:", cards)
         winner, winning_card = max(state.current_trick, key=lambda pc: pc[1].power)
-        print(f"Currently winning: {winner} with {winning_card.identifier}")
+        print(f"{winner} winning with {winning_card.identifier}")
     # Current hand (sorted)
     hand = sorted(state.hands[state.next_player], key=lambda c: c.power)
     print("Current hand:", [c.identifier for c in hand])
@@ -90,8 +90,8 @@ def play_game(state: GameState, render_func=None):
     last_trick = None
     while not state.is_terminal():
         print(f"TRICK {len(state.trick_history)+1}; Ply {len(state.current_trick)+1} of 4")
-        current = state.next_player
-        agent  = agents[current]
+        current_player = state.next_player
+        agent  = agents[current_player]
 
         # render if human…
         if isinstance(agent, HumanAgent) and render_func:
@@ -106,15 +106,16 @@ def play_game(state: GameState, render_func=None):
             print(f"Current trick: {cards}")
 
         # show hand & play
-        hand = sorted(state.hands[current], key=lambda c: c.power)
-        print(f"       {current} hand: {[c.identifier for c in hand]}")
+        hand = sorted(state.hands[current_player], key=lambda c: c.power)
+        print(f"       {current_player} hand: {[c.identifier for c in hand]}")
         if not isinstance(agent, HumanAgent):
-            print(f"{current} played {action.identifier}")
+            print(f"{current_player} played {action.identifier}")
 
-        # 1) apply the card to the state
+        # 1) update state with card just played.
         state = state.apply_action(action)
+        # if that was the 4th card in the trick, this 'state' now contains an empty current trick
 
-        # 2) **now** that the Q-club is in the new state, force everyone to refresh
+        # 2) now if Q-club is in the new state, force everyone to refresh
         if action.identifier == "Q-clubs":
             for ag in agents.values():
                 if hasattr(ag, "update_team_info"):
@@ -122,11 +123,11 @@ def play_game(state: GameState, render_func=None):
 
         # 3) show team status
         if hasattr(agent, "is_team_playing"):
-            members = getattr(agent, "team_members", None)
-            if agent.is_team_playing and members:
-                print(f"    {current} is team playing with {members}")
+            agent_team_members = getattr(agent, "team_members", None)
+            if agent.is_team_playing and agent_team_members:
+                print(f"    {current_player} is team playing with {agent_team_members}")
             else:
-                print(f"    {current} is not team playing")
+                print(f"    {current_player} is not team playing")
 
         # 4) trick-complete reporting
         if not state.current_trick:

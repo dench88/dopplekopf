@@ -123,12 +123,13 @@ class TeamMixin:
 
         # C) both Qs seen → everyone learns
         if len(played) == 2:
+            self.is_team_playing = True
             non_holders = set(state.hands) - original_holders
             if self.name in original_holders:
                 self.team_members = sorted(original_holders)
             else:
                 self.team_members = sorted(non_holders)
-            self.is_team_playing = True
+            
             return
 
     def get_team_members(self, state: GameState) -> List[str]:

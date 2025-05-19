@@ -37,14 +37,14 @@ class GameState:
 
     def apply_action(self, card: Card) -> "GameState":
         # Mutable copies
-        new_hands = {p: list(h) for p, h in self.hands.items()}
-        new_history = [list(tr) for tr in self.trick_history]
-        new_current = list(self.current_trick)
-        new_points = dict(self.points)
+        current_hands = {p: list(h) for p, h in self.hands.items()}
+        current_trick_history = [list(tr) for tr in self.trick_history]
+        the_current_trick = list(self.current_trick)
+        current_trick_points = dict(self.points)
 
         # remove card from hand and add to trick
-        new_hands[self.next_player].remove(card)
-        new_current.append((self.next_player, card))
+        current_hands[self.next_player].remove(card)
+        the_current_trick.append((self.next_player, card))
 
         # determine next player index
         players = list(constants.players.keys())
@@ -53,10 +53,10 @@ class GameState:
         next_player = players[next_idx]
 
         # if trick complete (4 cards)
-        if len(new_current) == len(players):
+        if len(the_current_trick) == len(players):
             # find winning card by power
             # determine trick suit from the very first card
-            trick_suit = new_current[0][1].category
+            trick_suit = the_current_trick[0][1].category
             # “strength” function: only same-suit or trumps ever count
             def strength(pc):
                 card = pc[1]
@@ -66,27 +66,27 @@ class GameState:
                 return -1
 
             # pick the trick-winner by adjusted strength
-            winner, winning_card = max(new_current, key=strength)
+            winner, winning_card = max(the_current_trick, key=strength)
 
             # sum trick points
-            trick_pts = sum(c.points for _, c in new_current)
-            new_points[winner] += trick_pts
+            trick_pts = sum(c.points for _, c in the_current_trick)
+            current_trick_points[winner] += trick_pts
             # record trick
-            new_history.append(new_current)
+            current_trick_history.append(the_current_trick)
             # clear current trick and set next player to winner
-            new_current = []
+            the_current_trick = []
             next_player = winner
 
         # freeze data structures
-        frozen_hands = {p: tuple(h) for p, h in new_hands.items()}
-        frozen_history = tuple(tuple(tr) for tr in new_history)
-        frozen_current = tuple(new_current)
+        frozen_hands = {p: tuple(h) for p, h in current_hands.items()}
+        frozen_history = tuple(tuple(tr) for tr in current_trick_history)
+        frozen_current = tuple(the_current_trick)
 
         # return new GameState
         return GameState(
             hands=frozen_hands,
             trick_history=frozen_history,
             current_trick=frozen_current,
-            points=new_points,
+            points=current_trick_points,
             next_player=next_player
         )
