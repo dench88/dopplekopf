@@ -31,7 +31,144 @@ def card_strength(card: Card, trick_suit: str) -> int:
         return card.power
     return -1
 
+def fast_opening_play(agent_name: str,
+                      hands: dict[str, tuple[Card, ...]],
+                      trick_history: tuple,
+                      current_trick: tuple) -> Optional[Card]:
+    """
+    If we are literally at the very first play of the very first trick, 
+    apply your fast heuristics.  Otherwise return None.
+    """
+    # only at absolute game start
+    if trick_history or current_trick:
+        return None
 
+    hand = list(hands[agent_name])
+
+    # — Priority 1: A-spades or A-clubs ——
+    acards = [c for c in hand if c.identifier in ("A-spades", "A-clubs")]
+    if acards:
+        spades = [c for c in hand if c.category == "spades" and c.identifier not in constants.trumps]
+        clubs  = [c for c in hand if c.category == "clubs"  and c.identifier not in constants.trumps]
+        # if fewer safe spades than clubs, lead A-spades, else A-clubs
+        if len(spades) <= len(clubs):
+            for c in acards:
+                if c.category == "spades":
+                    return c
+        for c in acards:
+            if c.category == "clubs":
+                return c
+
+    # — Priority 2: A-hearts if few hearts left ——
+    a_hearts     = [c for c in hand if c.identifier == "A-hearts"]
+    colour_hearts = [c for c in hand if c.category == "hearts" and c.identifier not in constants.trumps]
+    if a_hearts and len(colour_hearts) <= 2:
+        return a_hearts[0]
+
+    # — Priority 3: if I hold 3–5 J/Q, play the 3rd strongest ——
+    jq = [c for c in hand if c.type in ("J", "Q")]
+    if 3 <= len(jq) <= 5:
+        jq_sorted = sorted(jq, key=lambda c: c.power, reverse=True)
+        return jq_sorted[2]
+
+    # — Priority 4: if I hold exactly 2 J/Q, play the 2nd strongest ——
+    if len(jq) == 2:
+        jq_sorted = sorted(jq, key=lambda c: c.power, reverse=True)
+        return jq_sorted[1]
+
+    return None
+
+
+class TeamMixin:
+    def update_team_info(self, state: GameState, *, force=False):
+        # only at trick boundary unless forced
+        if state.current_trick and not force:
+            return
+
+        # 1) who’s played a Q-clubs?
+        played = {
+            p
+            for trick in state.trick_history
+            for p, c in trick
+            if c.identifier == 'Q-clubs'
+        } | {
+            p
+            for p, c in state.current_trick
+            if c.identifier == 'Q-clubs'
+        }
+
+        # 2) who still holds one?
+        still_holds = {
+            p
+            for p, h in state.hands.items()
+            if any(c.identifier == 'Q-clubs' for c in h)
+        }
+
+        original_holders = played | still_holds
+
+        # A) no Qs seen → nobody knows
+        if len(played) == 0:
+            self.is_team_playing = False
+            self.team_members = None
+            return
+
+        # B) exactly one seen → only the *other* holder (still_holds) learns
+        if len(played) == 1:
+            # if *I* still hold a Q (i.e. I didn't just play it),
+            # then I now know my partner
+            if self.name in still_holds:
+                self.is_team_playing = True
+                self.team_members = sorted(original_holders)
+            return
+
+        # C) both Qs seen → everyone learns
+        if len(played) == 2:
+            non_holders = set(state.hands) - original_holders
+            if self.name in original_holders:
+                self.team_members = sorted(original_holders)
+            else:
+                self.team_members = sorted(non_holders)
+            self.is_team_playing = True
+            return
+
+    def get_team_members(self, state: GameState) -> List[str]:
+        """
+        Returns the two names on my side once I know my team,
+        or None if I’m still in “selfish” (pre-team) mode.
+        """
+        # who’s played Q-clubs so far?
+        qc_public = {
+            p
+            for trick in state.trick_history
+            for p, c in trick
+            if c.identifier == "Q-clubs"
+        } | {
+            p
+            for p, c in state.current_trick
+            if c.identifier == "Q-clubs"
+        }
+
+        # who still holds a Q-clubs in hand?
+        holders = {
+            p
+            for p, hand in state.hands.items()
+            if any(c.identifier == "Q-clubs" for c in hand)
+        }
+
+        # once I’m in holders or both seen, reveal full teams
+        if self.name in holders or len(qc_public) == 2:
+            qc_public |= holders
+
+        # if I haven’t switched to team play yet, nobody’s shown
+        if not getattr(self, "is_team_playing", False):
+            return []
+
+        # pick my side
+        all_players = set(state.hands)
+        if self.name in qc_public:
+            return sorted(qc_public)
+        else:
+            return sorted(all_players - qc_public)
 
 class DuckFeedMixin:
     """
@@ -63,19 +200,19 @@ class DuckFeedMixin:
                 if partner_wins:
                     pool = [c for c in losers if c.identifier != '10-hearts'] or losers
                     choice = max(pool, key=lambda c: (c.points, c.power))
-                    print(f"{self.name} (last-player) partner winning, feed with {choice.identifier}")
+                    print(f"    **{self.name} (last-player) partner winning, feed with {choice.identifier}")
                     return choice
                 pool = [c for c in winners if c.identifier != '10-hearts'] or winners
                 choice = max(pool, key=lambda c: (c.points, c.power))
-                print(f"{self.name} (last-player) win trick with {choice.identifier}")
+                print(f"    **{self.name} (last-player) win trick with {choice.identifier}")
                 return choice
             if partner_wins:
                 pool = [c for c in losers if c.identifier != '10-hearts'] or losers
                 choice = max(pool, key=lambda c: (c.points, c.power))
-                print(f"{self.name} (last-player) partner winning, feed with {choice.identifier}")
+                print(f"    **{self.name} (last-player) partner winning, feed with {choice.identifier}")
                 return choice
             choice = min(losers, key=lambda c: (c.points, c.power))
-            print(f"{self.name} (last-player) duck cheaply with {choice.identifier}")
+            print(f"    **{self.name} (last-player) duck cheaply with {choice.identifier}")
             return choice
 
         # mid-trick duck if cannot win
@@ -87,17 +224,15 @@ class DuckFeedMixin:
                 if partner_wins and self.is_team_playing:
                     pool = [c for c in losers if c.identifier != '10-hearts'] or losers
                     choice = max(pool, key=lambda c: (c.points, c.power))
-                    print(f"{self.name} mid-trick: partner winning, feed with {choice.identifier}")
+                    print(f"    **{self.name} mid-trick: partner winning, feed with {choice.identifier}")
                     return choice
                 choice = min(losers, key=lambda c: (c.points, c.power))
-                print(f"{self.name} mid-trick: duck cheaply with {choice.identifier}")
+                print(f"    **{self.name} mid-trick: duck cheaply with {choice.identifier}")
                 return choice
         return None
 
 
-
-
-class MinimaxAgent(DuckFeedMixin):
+class MinimaxAgent(DuckFeedMixin, TeamMixin):
     """
     Perfect-information minimax with alpha-beta pruning, maximizing team or individual score.
     """
@@ -107,59 +242,23 @@ class MinimaxAgent(DuckFeedMixin):
         self.depth = depth
         self.is_team_playing = False  # add this line!
 
-    def _check_team_switch(self, state: GameState, *, force=False):
-        # 1) Pre-trick boundary guard (unless forced)
-        if state.current_trick and not force:
-            return
-
-        # 2) Who’s played a Q-club so far?
-        played = {
-                     p for trick in state.trick_history for p, card in trick
-                     if card.identifier == 'Q-clubs'
-                 } | {
-                     p for p, card in state.current_trick if card.identifier == 'Q-clubs'
-                 }
-
-        # 3) Who still holds one in hand?
-        holders = {
-            p for p, h in state.hands.items()
-            if any(c.identifier == 'Q-clubs' for c in h)
-        }
-
-        # 4) Should I switch now?
-        first_club = (len(played) == 1 and self.name in holders)
-        second_club = (len(played) == 2)
-
-        if (first_club or second_club) and not self.is_team_playing:
-            # Build the full team set
-            qc_public = set(played)
-            if second_club or self.name in holders:
-                # now reveal both holders
-                qc_public |= {
-                    p for p, h in state.hands.items()
-                    if any(c.identifier == 'Q-clubs' for c in h)
-                }
-
-            # Your team is qc_public if you’re in it, else the complement
-            if self.name in qc_public:
-                team = qc_public
-            else:
-                team = set(state.hands.keys()) - qc_public
-
-            partners = sorted(team - {self.name})
-            partner_str = ", ".join(partners)
-
-            print(f"{self.name} now knows their team (with {partner_str}) and switches to team play!")
-            self.is_team_playing = True
-
-
     def choose(self, state: GameState) -> Card:
+        self.update_team_info(state)
         legal = state.legal_actions()
-        # team switch before any pick if start of trick
-        if not state.current_trick and hasattr(self, '_check_team_switch'):
-            self._check_team_switch(state)
+        # # team switch before any pick if start of trick
+        # if not state.current_trick and hasattr(self, '_check_team_switch'):
+        #     self._check_team_switch(state)
         # duck/feed override
         choice = self._duck_or_feed(state, legal)
+        # 2) fast opening heuristic
+        fast = fast_opening_play(self.name,
+                             state.hands,
+                             state.trick_history,
+                             state.current_trick)
+        if fast:
+            print(f"{self.name} used fast opening rule: {fast.identifier}")
+            return fast
+    
         if choice:
             return choice
         # minimax search reach end of current trick by default
@@ -197,7 +296,7 @@ class MinimaxAgent(DuckFeedMixin):
                     break
             return best_move, min_eval
 
-class ExpectiMaxAgent(DuckFeedMixin):
+class ExpectiMaxAgent(DuckFeedMixin, TeamMixin):
     """
     Sampling-based imperfect-information agent: for each candidate move, samples 10 possible hypothetical deals
     and runs a depth-limited perfect-information minimax, averaging scores to pick the best.
@@ -208,56 +307,19 @@ class ExpectiMaxAgent(DuckFeedMixin):
         self.depth = depth
         self.is_team_playing = False  # initially selfish
 
-    def _check_team_switch(self, state: GameState, *, force=False):
-        # 1) Pre-trick boundary guard (unless forced)
-        if state.current_trick and not force:   
-            return
 
-        # 2) Who’s played a Q-club so far?
-        played = {
-                     p for trick in state.trick_history for p, card in trick
-                     if card.identifier == 'Q-clubs'
-                 } | {
-                     p for p, card in state.current_trick if card.identifier == 'Q-clubs'
-                 }
-
-        # 3) Who still holds one in hand?
-        holders = {
-            p for p, h in state.hands.items()
-            if any(c.identifier == 'Q-clubs' for c in h)
-        }
-
-        # 4) Should I switch now?
-        first_club = (len(played) == 1 and self.name in holders)
-        second_club = (len(played) == 2)
-
-        if (first_club or second_club) and not self.is_team_playing:
-            # Build the full team set
-            qc_public = set(played)
-            if second_club or self.name in holders:
-                # now reveal both holders
-                qc_public |= {
-                    p for p, h in state.hands.items()
-                    if any(c.identifier == 'Q-clubs' for c in h)
-                }
-
-            # Your team is qc_public if you’re in it, else the complement
-            if self.name in qc_public:
-                team = qc_public
-            else:
-                team = set(state.hands.keys()) - qc_public
-
-            partners = sorted(team - {self.name})
-            partner_str = ", ".join(partners)
-
-            print(f"{self.name} now knows their team (with {partner_str}) and switches to team play!")
-            self.is_team_playing = True
 
     def choose(self, state: GameState) -> Card:
+        self.update_team_info(state)
         legal = state.legal_actions()
-        # team switch at trick start
-        if not state.current_trick:
-            self._check_team_switch(state)
+        # 2) fast opening heuristic
+        fast = fast_opening_play(self.name,
+                             state.hands,
+                             state.trick_history,
+                             state.current_trick)
+        if fast:
+            print(f"{self.name} used fast opening rule: {fast.identifier}")
+            return fast
         # duck/feed override
         choice = self._duck_or_feed(state, legal)
         if choice:
@@ -278,14 +340,15 @@ class ExpectiMaxAgent(DuckFeedMixin):
                 )
                 scores.append(sc)
             avg = sum(scores) / len(scores)
-            tqdm.write(f"  → {action.identifier}: used {len(scores)}/{self.samples} samples, avg {avg:.2f}")
+            tqdm.write(f"      → {action.identifier}: used {len(scores)}/{self.samples} samples, avg {avg:.2f}")
             if avg > best_score:
                 best_score, best_moves = avg, [action]
             elif avg == best_score:
                 best_moves.append(action)
         final_choice = random.choice(best_moves)
-        print(f"[INFO] Final choice: {final_choice.identifier}")
+        # print(f"[INFO] Final choice: {final_choice.identifier}")
         return final_choice
+
 
     def _sample_hidden(self, state: GameState) -> GameState:
         # Gather known identifiers: played cards + my hand
@@ -316,38 +379,3 @@ class ExpectiMaxAgent(DuckFeedMixin):
             points=state.points
         )
 
-# def debug_one_sample_trick(agent, state: GameState, action: Card):
-#     """
-#     Sample hidden hands once, apply `action`, then finish off
-#     the rest of this one trick at random, printing each play
-#     and the final trick point tally.
-#     """
-#     # 1) create a fully‐dealt sample
-#     sampled: GameState = agent._sample_hidden(state)
-#     print("\n--- DEBUG: one sampled deal ---")
-#     for p, hand in sampled.hands.items():
-#         print(f"  {p} holds: {[c.identifier for c in hand]}")
-#     print(f"\nLead: {state.next_player} plays {action.identifier}")
-    
-#     # 2) play the lead
-#     s = sampled.apply_action(action)
-    
-#     # 3) continue this trick until 4 cards are down
-#     plays: List[Tuple[str, str]] = [(state.next_player, action.identifier)]
-#     while s.current_trick:
-#         nxt = s.next_player
-#         legal = s.legal_actions()
-#         # pick randomly among legal for this debug
-#         choice = random.choice(legal)
-#         print(f"      {nxt} plays {choice.identifier}")
-#         plays.append((nxt, choice.identifier))
-#         s = s.apply_action(choice)
-    
-#     # 4) trick is complete
-#     trick = s.trick_history[-1]
-#     pts = sum(c.points for _, c in trick)
-#     print("\nTrick finished:")
-#     for p, c in trick:
-#         print(f"    {p}: {c.identifier} ({c.points} pts)")
-#     print(f"Total trick points → {pts}\n")
-#     print("--- end DEBUG sample ---\n")

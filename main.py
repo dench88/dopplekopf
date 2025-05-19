@@ -25,6 +25,9 @@ agents = {
     "HARLEM": ExpectiMaxAgent("HARLEM"),
     "ALICE": ExpectiMaxAgent("ALICE"),
     # "HARLEM": ExpectiMaxAgent("HARLEM", samples=10, depth=8),
+    # "ALICE": ExpectiMaxAgent("ALICE", samples=10, depth=8),
+    # "SUSIE": ExpectiMaxAgent("SUSIE", samples=10, depth=8),
+    # "RUSTY": ExpectiMaxAgent("RUSTY", samples=10, depth=8),
     # "HARLEM": DeterminizedMCTSAgent("HARLEM", simulations=1500),
     # "SUSIE": MinimaxAgent("SUSIE", depth=5),
     # "SUSIE": DeterminizedMCTSAgent("SUSIE", simulations=1500),
@@ -87,86 +90,45 @@ def play_game(state: GameState, render_func=None):
     last_trick = None
     while not state.is_terminal():
         print(f"TRICK {len(state.trick_history)+1}; Ply {len(state.current_trick)+1} of 4")
-        current_player = state.next_player
-        agent = agents[current_player]
+        current = state.next_player
+        agent  = agents[current]
 
-        if (isinstance(agent, HumanAgent) or isinstance(agent, DeterminizedMCTSAgent)) and render_func:
+        # render if human…
+        if isinstance(agent, HumanAgent) and render_func:
             render_func(state, last_trick)
 
+        # ask agent for move
         action = agent.choose(state)
 
-        # show what’s in the trick so far
+        # show partial trick
         if state.current_trick:
-            cards = [card.identifier for _, card in state.current_trick]
-            print(f"Current trick so far: {cards}")
+            cards = [c.identifier for _, c in state.current_trick]
+            print(f"Current trick: {cards}")
 
-        # # team‐mode status ———
-        # if hasattr(agent, "is_team_playing"):
-        #     status = "team playing" if agent.is_team_playing else "not team playing"
-        #     print(f"{current_player} is {status}")
-        # ------- Team‐status print with membership -------
-        # figure out who’s publicly known as Q-club holders so far
-        qc_public = {
-            p for trick in state.trick_history for p, c in trick
-            if c.identifier == 'Q-clubs'
-        } | {
-            p for p, c in state.current_trick
-            if c.identifier == 'Q-clubs'
-        }
-
-        # if I’m a holder, or both clubs have been seen, reveal full team
-        if agent.name in qc_public or len(qc_public) == 2:
-            qc_public |= {
-                p for p, hand in state.hands.items()
-                if any(c.identifier == 'Q-clubs' for c in hand)
-            }
-        #### >>>> BELOW IS WRONG - it makes all non Q-clubs team members think they are a team when they should be playing selfishly
-        if agent.is_team_playing:
-            # determine which side I’m on
-            if agent.name in qc_public:
-                team_members = sorted(qc_public)
-            else:
-                team_members = sorted(set(state.hands) - qc_public)
-            print(f"{current_player} is team playing with {team_members}")
-        else:
-            print(f"{current_player} is not team playing")
-        # --------------------------------------------------
-
-
-        hand = sorted(state.hands[current_player], key=lambda c: c.power)
-        print(f"       {current_player} hand:", [card.identifier for card in hand])
+        # show hand & play
+        hand = sorted(state.hands[current], key=lambda c: c.power)
+        print(f"       {current} hand: {[c.identifier for c in hand]}")
         if not isinstance(agent, HumanAgent):
-            print(f"{current_player} played {action.identifier}")
+            print(f"{current} played {action.identifier}")
 
-        # 1) Apply the play
+        # 1) apply the card to the state
         state = state.apply_action(action)
 
-        # 2) Immediate team‐switch logic on Q-clubs
-        if action.identifier == 'Q-clubs':
-            # who’s already played a Q-club (public set)
-            played = {
-                         p
-                         for trick in state.trick_history
-                         for p, c in trick
-                         if c.identifier == 'Q-clubs'
-                     } | {
-                         p for p, c in state.current_trick if c.identifier == 'Q-clubs'
-                     }
+        # 2) **now** that the Q-club is in the new state, force everyone to refresh
+        if action.identifier == "Q-clubs":
+            for ag in agents.values():
+                if hasattr(ag, "update_team_info"):
+                    ag.update_team_info(state, force=True)
 
-            if len(played) == 1:
-                # first club → only holders learn
-                for name, ag in agents.items():
-                    if hasattr(ag, '_check_team_switch') \
-                            and any(c.identifier == 'Q-clubs' for c in state.hands[name]):
-                        ag._check_team_switch(state, force=True)
+        # 3) show team status
+        if hasattr(agent, "is_team_playing"):
+            members = getattr(agent, "team_members", None)
+            if agent.is_team_playing and members:
+                print(f"    {current} is team playing with {members}")
+            else:
+                print(f"    {current} is not team playing")
 
-            elif len(played) == 2:
-                # second club → everyone learns
-                for ag in agents.values():
-                    if hasattr(ag, '_check_team_switch'):
-                        ag._check_team_switch(state, force=True)
-
-        # 3) Now check for trick completion
+        # 4) trick-complete reporting
         if not state.current_trick:
             last_trick = state.trick_history[-1]
             cards = [c.identifier for _, c in last_trick]
@@ -176,9 +138,13 @@ def play_game(state: GameState, render_func=None):
             print(f"************{winner} won {pts} points; totals: {state.points}")
         else:
             last_trick = None
+
         print("=================================")
 
     return state
+
+
+
 
 
 if __name__ == "__main__":
