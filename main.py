@@ -61,7 +61,7 @@ def make_initial_state():
 
 def render(state, last_trick):
     # Whose turn
-    print(f"Next to play: {state.next_player}")
+    # print(f"Next to play: {state.next_player}")
     # Public Q-clubs: only those who've actually played Q-clubs so far
     qc_public = [
         player
@@ -91,6 +91,7 @@ def play_game(state: GameState, render_func=None):
     while not state.is_terminal():
         print(f"TRICK {len(state.trick_history)+1}; Ply {len(state.current_trick)+1} of 4")
         current_player = state.next_player
+        print(f"{current_player} to play!")
         agent  = agents[current_player]
 
         # render if human…

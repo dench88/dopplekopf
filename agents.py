@@ -194,16 +194,21 @@ class DuckFeedMixin:
         
         # last-player override: feed or win
         if state.current_trick and len(state.current_trick) == num_players - 1 and self.is_team_playing:
-            winners = [c for c in legal if card_strength(c, trick_suit) > current_strength]
+            cards_that_are_winners = [c for c in legal if card_strength(c, trick_suit) > current_strength]
             losers  = [c for c in legal if card_strength(c, trick_suit) <= current_strength]
             partner_wins = ((current_winner in qc_public) == (self.name in qc_public))
-            if winners:
+            if cards_that_are_winners:
                 if partner_wins:
-                    pool = [c for c in losers if c.identifier != '10-hearts'] or losers
-                    choice = max(pool, key=lambda c: (c.points, c.power))
-                    print(f"    **{self.name} (last-player) partner winning, feed with {choice.identifier}")
-                    return choice
-                pool = [c for c in winners if c.identifier != '10-hearts'] or winners
+                    # try to feed with a low card that isn’t 10-hearts,
+                    # but if there are no losers at all fall back to winners
+                    feed_pool = [c for c in losers if c.identifier != '10-hearts']
+                    pool = feed_pool or cards_that_are_winners
+                    return max(pool, key=lambda c: (c.points, c.power))
+                    # pool = [c for c in losers if c.identifier != '10-hearts'] or losers
+                    # choice = max(pool, key=lambda c: (c.points, c.power))
+                    print(f"    **{self.name} is last-player. Partner winning. Feed with {choice.identifier}")
+                    # return choice
+                pool = [c for c in cards_that_are_winners if c.identifier != '10-hearts'] or cards_that_are_winners
                 choice = max(pool, key=lambda c: (c.points, c.power))
                 print(f"    **{self.name} (last-player) win trick with {choice.identifier}")
                 return choice
@@ -218,8 +223,8 @@ class DuckFeedMixin:
 
         # mid-trick duck if cannot win
         if state.current_trick:
-            winners = [c for c in legal if card_strength(c, trick_suit) > current_strength]
-            if not winners:
+            cards_that_are_winners = [c for c in legal if card_strength(c, trick_suit) > current_strength]
+            if not cards_that_are_winners:
                 losers = [c for c in legal if card_strength(c, trick_suit) <= current_strength]
                 partner_wins = ((current_winner in qc_public) == (self.name in qc_public))
                 if partner_wins and self.is_team_playing:
@@ -329,7 +334,30 @@ class ExpectiMaxAgent(DuckFeedMixin, TeamMixin):
         depth = self.depth if self.depth is not None else (len(constants.players) - len(state.current_trick))
         best_moves, best_score = [], -math.inf
         seen = set()
-        for action in tqdm(state.legal_actions(), desc="Root actions", leave=True, disable=True):
+        # for action in tqdm(state.legal_actions(), desc="Root actions", leave=True, disable=True):
+        #     if action.identifier in seen:
+        #         continue
+        #     seen.add(action.identifier)
+        # 0) at the top of choose(), after you’ve determined depth/samples
+        # grab the raw legal actions
+        raw_actions = state.legal_actions()
+
+        # apply your “no 10-hearts in tricks 1–6 when trick < 20 points” rule
+        actions = []
+        current_trick_pts = sum(c.points for _, c in state.current_trick)
+        for c in raw_actions:
+            if (
+                c.identifier == "10-hearts"
+                and len(state.trick_history) < 6
+                and current_trick_pts < 20
+            ):
+                # skip it
+                continue
+            actions.append(c)
+
+        # now use actions instead of state.legal_actions() in your sampling loop
+        seen = set()
+        for action in actions:
             if action.identifier in seen:
                 continue
             seen.add(action.identifier)
