@@ -36,57 +36,38 @@ class GameState:
         return follow if follow else hand
 
     def apply_action(self, card: Card) -> "GameState":
-        # Mutable copies
-        current_hands = {p: list(h) for p, h in self.hands.items()}
-        current_trick_history = [list(tr) for tr in self.trick_history]
-        the_current_trick = list(self.current_trick)
-        current_trick_points = dict(self.points)
+        # 1) Mutable copies of everything
+        players = list(constants.players)
+        hands   = {p: list(h)             for p, h in self.hands.items()}
+        history = [list(tr)              for tr     in self.trick_history]
+        trick   = [*self.current_trick, (self.next_player, card)]
+        points  = dict(self.points)
 
-        # remove card from hand and add to trick
-        current_hands[self.next_player].remove(card)
-        the_current_trick.append((self.next_player, card))
+        # remove card from hand
+        hands[self.next_player].remove(card)
 
-        # determine next player index
-        players = list(constants.players.keys())
-        idx = players.index(self.next_player)
-        next_idx = (idx + 1) % len(players)
-        next_player = players[next_idx]
+        # compute the “default” next player
+        idx      = players.index(self.next_player)
+        next_plr = players[(idx + 1) % len(players)]
 
-        # if trick complete (4 cards)
-        if len(the_current_trick) == len(players):
-            # find winning card by power
-            # determine trick suit from the very first card
-            trick_suit = the_current_trick[0][1].category
-            # “strength” function: only same-suit or trumps ever count
+        # 2) If trick is complete, score it
+        if len(trick) == len(players):
+            lead_suit = trick[0][1].category
             def strength(pc):
-                card = pc[1]
-                if card.category == trick_suit or card.category == 'trumps':
-                    return card.power
-                # any off-suit, non-trump color card is powerless
-                return -1
+                cat = pc[1].category
+                return pc[1].power if (cat == lead_suit or cat == "trumps") else -1
 
-            # pick the trick-winner by adjusted strength
-            winner, winning_card = max(the_current_trick, key=strength)
+            winner, _ = max(trick, key=strength)
+            points[winner] += sum(c.points for _, c in trick)
+            history.append(trick)
+            trick = []
+            next_plr = winner
 
-            # sum trick points
-            trick_pts = sum(c.points for _, c in the_current_trick)
-            current_trick_points[winner] += trick_pts
-            # record trick
-            current_trick_history.append(the_current_trick)
-            # clear current trick and set next player to winner
-            the_current_trick = []
-            next_player = winner
-
-        # freeze data structures
-        frozen_hands = {p: tuple(h) for p, h in current_hands.items()}
-        frozen_history = tuple(tuple(tr) for tr in current_trick_history)
-        frozen_current = tuple(the_current_trick)
-
-        # return new GameState
+        # 3) Freeze and return new state
         return GameState(
-            hands=frozen_hands,
-            trick_history=frozen_history,
-            current_trick=frozen_current,
-            points=current_trick_points,
-            next_player=next_player
+            hands={p: tuple(h) for p, h in hands.items()},
+            trick_history=tuple(tuple(tr) for tr in history),
+            current_trick=tuple(trick),
+            points=points,
+            next_player=next_plr
         )

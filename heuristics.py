@@ -2,57 +2,46 @@ from game_state import GameState
 # from agents import ExpectiMaxAgent, MinimaxAgent
 
 def evaluate(state: GameState, me: str, agent=None) -> float:
-    # 1) During sampling: stay selfish and use the real state.points
+    # 1) During rollout sampling, stay selfish on raw points
     if agent and getattr(agent, "is_sampling", False):
         my_pts    = state.points[me]
         other_pts = sum(v for p, v in state.points.items() if p != me)
         return my_pts - other_pts
 
-    # helper: “adjusted” points for lookahead, zeroing out any 10-hearts
+    # 2) Adjust for 10-hearts: deduct 10 from whoever won any trick that contained it
     def adjusted_pts(player_name: str) -> int:
         pts = state.points[player_name]
         for trick in state.trick_history:
-            # if that trick included a 10-hearts, then subtract 10 from whoever won it
             if any(c.identifier == "10-hearts" for _, c in trick):
-                # replicate the same strength logic you use in apply_action():
-                suit = trick[0][1].category
-                def strength(pc):
-                    card = pc[1]
-                    return card.power if card.category in (suit, "trumps") else -1
+                # decide winner exactly as in apply_action()
+                lead = trick[0][1].category
+                strength = lambda pc: pc[1].power if pc[1].category in (lead, "trumps") else -1
                 winner = max(trick, key=strength)[0]
                 if winner == player_name:
                     pts -= 10
         return pts
 
-    # 2) Find public Q-club holders
-    qc_public = {
-        p for trick in state.trick_history for p, c in trick
-        if c.identifier == "Q-clubs"
-    } | {
-        p for p, c in state.current_trick if c.identifier == "Q-clubs"
-    }
+    # 3) Tell the agent to refresh its team info, then ask who its teammates are
+    if agent:
+        agent.update_team_info(state)
+        team = set(agent.get_team_members(state))
+    else:
+        team = set()
 
-    # 3) If <2 clubs public AND I’m not one of them, fall back to selfish
-    if len(qc_public) < 2 and me not in qc_public:
+    # 4) If I don’t yet know my partner, play selfishly with adjusted points
+    if not team:
         my_pts    = adjusted_pts(me)
         other_pts = sum(adjusted_pts(p) for p in state.points if p != me)
         return my_pts - other_pts
 
-    # 4) Otherwise reveal full teams
-    if me in qc_public or len(qc_public) == 2:
-        qc_public |= {
-            p for p, hand in state.hands.items()
-            if any(c.identifier == "Q-clubs" for c in hand)
-        }
+    # 5) Otherwise, sum team vs. opponents
+    all_players = set(state.points)
+    opp = all_players - team
 
-    team1 = qc_public
-    team2 = set(state.points) - qc_public
+    team_pts = sum(adjusted_pts(p) for p in team)
+    opp_pts  = sum(adjusted_pts(p) for p in opp)
 
-    pts1 = sum(adjusted_pts(p) for p in team1)
-    pts2 = sum(adjusted_pts(p) for p in team2)
-
-    # 5) return from my perspective
-    return (pts1 - pts2) if me in team1 else (pts2 - pts1)
+    return (team_pts - opp_pts) if me in team else (opp_pts - team_pts)
 
 
 
