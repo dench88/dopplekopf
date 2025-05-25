@@ -374,6 +374,12 @@ class ExpectiMaxAgent(DuckFeedMixin, TeamMixin):
                 best_score, best_moves = avg, [action]
             elif avg == best_score:
                 best_moves.append(action)
+        
+        # if no best moves, return a random legal action
+        if not best_moves:
+            best_moves = legal
+            print(f"[WARNING] No best moves found, using random legal action.")
+
         final_choice = random.choice(best_moves)
         # print(f"[INFO] Final choice: {final_choice.identifier}")
         return final_choice

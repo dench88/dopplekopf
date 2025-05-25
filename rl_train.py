@@ -3,7 +3,9 @@ from stable_baselines3.common.monitor import Monitor
 from ai import DoppelkopfEnv    # ensure ai.py is in same folder or on PYTHONPATH
 
 def main():
-    env = Monitor(DoppelkopfEnv("ALICE"))  # Monitor for logging
+    # env = Monitor(DoppelkopfEnv("ALICE"))  # Monitor for logging
+    env = Monitor(DoppelkopfEnv("ALICE"), "logs/")
+
     model = DQN(
         "MlpPolicy",
         env,
