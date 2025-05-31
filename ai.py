@@ -1,10 +1,10 @@
-import gym
-from gym import spaces
+import gymnasium as gym
+from gymnasium import spaces
 import constants
 from game_state import GameState
 import numpy as np
 import random
-from agents import ExpectiMaxAgent
+from agents import ExpectiMaxAgent, RandomAgent
 import constants
 
 # alias for clarity (optional)
@@ -15,17 +15,15 @@ SUITS = constants.suits
 CARD_TYPES = [(r, s) for r in RANKS for s in SUITS]
 TYPE_TO_IDX = {t: i for i, t in enumerate(CARD_TYPES)}
 
-
 class DoppelkopfEnv(gym.Env):
-    def __init__(self, player_name: str):
+    def __init__(self, player_name: str, expectimax_prob: float = 0.85):
         super().__init__()
         self.player = player_name
+        self.agent = None
         # Expectimax opponents
-        self.opponent_agents = {
-            p: ExpectiMaxAgent(p)
-            for p in constants.players
-            if p != self.player
-        }
+        self.opponent_agents = {}
+        self.expectimax_prob = expectimax_prob
+        self._assign_opponents()
 
         # — your existing hand/action setup —
         # CARD_TYPES   = [(r,s) for r in RANKS for s in SUITS]   # 24 types
@@ -37,13 +35,14 @@ class DoppelkopfEnv(gym.Env):
         self.seen_offset  = hand_size
         self.points_offset = hand_size + hand_size
         self.trick_offset  = self.points_offset + len(constants.players)
-        self.suit_offset   = self.trick_offset + 1
+        #Remove trick suit lengths from obs vector
+        # self.suit_offset   = self.trick_offset + 1
 
         # total obs = hand_counts + seen_counts + player_pts + trick_cnt + suit_lengths(3)
-        prelim_obs_size = hand_size + hand_size + len(constants.players) + 1 + 3
+        prelim_obs_size = hand_size + hand_size + len(constants.players) + 1
 
         # Add team related flags after your suit-counts etc.
-        self.team_flag_offset   = self.suit_offset + 3
+        self.team_flag_offset   = self.trick_offset + 1
         self.partner_offset     = self.team_flag_offset + 1
         n_other_players         = len(constants.players) - 1
         obs_size = prelim_obs_size + 1 + n_other_players
@@ -56,13 +55,37 @@ class DoppelkopfEnv(gym.Env):
         )
         self.state = None
 
+    def _assign_opponents(self):
+        """(Re)randomize opponent types from scratch."""
+        self.opponent_agents.clear()
+        for p in constants.players:
+            if p == self.player:
+                continue
+            if random.random() < self.expectimax_prob:
+                self.opponent_agents[p] = ExpectiMaxAgent(p)
+            else:
+                self.opponent_agents[p] = RandomAgent()
 
+    def reset(self, *, seed=None, options=None):
+        # 1) If you want reproducible deals, you can optionally seed Python’s RNG here:
+        if seed is not None:
+            import random as _random
+            _random.seed(seed)
 
-    def reset(self):
-        # deal fresh GameState
+        # 2) Deal a fresh GameState (using your random_deal helper or manual slicing)
         self.state = GameState.random_deal()
-        return self._encode(self.state)
 
+        # 3) (Re‐)assign opponents if you rotate them per episode
+        if hasattr(self, "_assign_opponents"):
+            self._assign_opponents()
+
+        # 4) Force team‐info update if you attach a rule‐based agent
+        if getattr(self, "agent", None):
+            self.agent.update_team_info(self.state, force=True)
+
+        # 5) Encode and return as (obs, info)
+        obs = self._encode(self.state)
+        return obs, {}  # empty info dict
 
 
     def step(self, action):
@@ -93,7 +116,7 @@ class DoppelkopfEnv(gym.Env):
         # (6) Return
         done = self.state.is_terminal()
         obs  = self._encode(self.state)
-        return obs, reward, done, {}
+        return obs, reward, done, False, {}
 
 
     def render(self, mode="human"):
@@ -101,53 +124,41 @@ class DoppelkopfEnv(gym.Env):
         print(self.state)
 
 
-    # — helpers below —
+
     def _encode(self, state: GameState):
         vec = np.zeros(self.observation_space.shape[0], dtype=np.int16)
         
-        # — 1) Hand counts (0/1/2) —
+        # 1) Hand counts
         for c in state.hands[self.player]:
             idx = TYPE_TO_IDX[(c.type, c.suit)]
             vec[self.hand_offset + idx] += 1
 
-        # — 2) Seen-card counts (0/1/2) —
+        # 2) Seen-card counts
         for trick in (*state.trick_history, state.current_trick):
             for _, card in trick:
                 idx = TYPE_TO_IDX[(card.type, card.suit)]
                 vec[self.seen_offset + idx] += 1
 
-        # — 3) Points for each player —
+        # 3) Points
         for i, p in enumerate(constants.players):
             vec[self.points_offset + i] = state.points[p]
 
-        # — 4) Trick count —
+        # 4) Trick count
         vec[self.trick_offset] = len(state.trick_history)
 
-        # — 5) Suit lengths (non-trumps only) —
-        #    diamonds are trumps, so only spades, clubs, hearts
-        # count non‐trump spades
-        spades = sum(
-            1
-            for c in state.hands[self.player]
-            if c.suit == "spades" and c.identifier not in constants.trumps
-        )
+        # 5) Team-play flag (only if self.agent is not None)
+        if getattr(self, "agent", None):
+            vec[self.team_flag_offset] = int(self.agent.is_team_playing)
+        else:
+            vec[self.team_flag_offset] = 0
 
-        # similarly for hearts and clubs
-        hearts = sum(
-            1
-            for c in state.hands[self.player]
-            if c.suit == "hearts" and c.identifier not in constants.trumps
-        )
-
-        clubs = sum(
-            1
-            for c in state.hands[self.player]
-            if c.suit == "clubs" and c.identifier not in constants.trumps
-        )
-
-        vec[self.suit_offset + 0] = spades
-        vec[self.suit_offset + 1] = clubs
-        vec[self.suit_offset + 2] = hearts
+        # 6) Partner one-hot (only if self.agent is not None)
+        if getattr(self, "agent", None):
+            partner_list = self.agent.get_team_members(state)
+            others = [p for p in constants.players if p != self.player]
+            for i, p in enumerate(others):
+                vec[self.partner_offset + i] = 1 if p in partner_list else 0
+        # else: leave those partner slots as 0
 
         return vec
 

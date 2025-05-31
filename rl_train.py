@@ -7,16 +7,20 @@ def main():
     env = Monitor(DoppelkopfEnv("ALICE"), "logs/")
 
     model = DQN(
-        "MlpPolicy",
-        env,
-        verbose=1,
-        learning_rate=1e-3,
-        buffer_size=50_000,
-        exploration_fraction=0.1,
-        exploration_final_eps=0.02,
-    )
+    "MlpPolicy",
+    env,
+    gamma=1.0,
+    verbose=1,
+    learning_rate=1e-3,
+    buffer_size=50_000,
+    exploration_fraction=0.1,
+    exploration_final_eps=0.02,
+)
+
     model.learn(total_timesteps=200_000)
-    model.save("doppelkopf_dqn")
+    model.save("doppelkopf_dqn_200k")
+    env.close()
+
     print("Training complete, model saved as doppelkopf_dqn.zip")
 
 if __name__ == "__main__":
