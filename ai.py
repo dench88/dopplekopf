@@ -8,11 +8,11 @@ from agents import ExpectiMaxAgent, RandomAgent
 import constants
 
 # alias for clarity (optional)
-RANKS = constants.types
+TYPES = constants.types
 SUITS = constants.suits
 
 # build your 24 “card types” and index map
-CARD_TYPES = [(r, s) for r in RANKS for s in SUITS]
+CARD_TYPES = [(r, s) for r in TYPES for s in SUITS]
 TYPE_TO_IDX = {t: i for i, t in enumerate(CARD_TYPES)}
 
 class DoppelkopfEnv(gym.Env):
@@ -172,30 +172,63 @@ class DoppelkopfEnv(gym.Env):
 
 
     def _compute_reward(self, old: GameState, new: GameState) -> float:
-        # only give reward at the end of the hand
+        """
+        Gives:
+        • A +X or –X reward immediately after each completed trick (X = trick’s point total).
+        • At the end of the hand, gives the usual team‐point differential.
+
+        old: the GameState before applying the last move (including opponents’ cards for that trick).
+        new: the GameState after that move (so if a trick just finished, new.trick_history includes it).
+        """
+
+        # 1) If the hand is not yet over, see if a new trick just completed
         if not new.is_terminal():
+            # Did we just finish a trick? Compare lengths of trick_history
+            if len(new.trick_history) > len(old.trick_history):
+                last_trick = new.trick_history[-1]
+
+                # Sum up the points in that trick
+                trick_pts = sum(card.points for _, card in last_trick)
+
+                # Determine who won that trick
+                suit = last_trick[0][1].category
+                def strength(pair):
+                    _, card = pair
+                    # A card “counts” if it’s either the same suit or a trump
+                    return card.power if card.category in (suit, "trumps") else -1
+
+                winner = max(last_trick, key=strength)[0]
+
+                # Figure out which two players are on ALICE’s team right now
+                if getattr(self, "agent", None):
+                    team = self.agent.get_team_members(new)
+                else:
+                    team = []
+
+                # If the trick‐winner is on ALICE’s team, give +trick_pts; otherwise –trick_pts
+                return trick_pts if (winner in team) else -trick_pts
+
+            # If no trick was just completed (e.g. mid‐trick), give zero intermediate reward
             return 0
 
-        # if we have a rule-based agent attached, refresh its team info
-        team = []
-        if hasattr(self, "agent") and self.agent:
-            self.agent.update_team_info(new)
+        # 2) If we reach here, new.is_terminal() == True → the entire hand is over
+        #    Now give the final “team‐point differential” exactly as before.
+
+        if getattr(self, "agent", None):
+            # Force the agent to recompute team info now that all Q‐clubs have been played
+            self.agent.update_team_info(new, force=True)
             team = self.agent.get_team_members(new)
 
-        # --- Team-aware reward ---
-        if len(team) == 2:
-            # sum up points for my side vs theirs
+            # Sum up final points for ALICE’s team vs. the opponents
             team_pts = sum(new.points[p] for p in team)
-            opp_pts  = sum(v for p,v in new.points.items() if p not in team)
-            # from my perspective: if I'm on the team, reward = (my team – opponents)
-            # if somehow I'm not in the returned list, flip the sign
-            if self.player in team:
-                return team_pts - opp_pts
-            else:
-                return opp_pts - team_pts
+            opp_pts  = sum(v for p, v in new.points.items() if p not in team)
 
-        # --- Fallback to solo reward ---
-        my_pts  = new.points[self.player]
-        opp_pts = sum(v for p,v in new.points.items() if p != self.player)
-        return my_pts - opp_pts
+            # If (for some reason) ALICE is on that returned “team” list, reward = team_pts – opp_pts.
+            # Otherwise (if ALICE somehow wasn’t included), flip the sign.
+            return (team_pts - opp_pts) if (self.player in team) else (opp_pts - team_pts)
 
+        else:
+            # Fallback: treat it as a “solo” hand if there’s no rule‐based agent attached
+            my_pts  = new.points[self.player]
+            opp_pts = sum(v for p, v in new.points.items() if p != self.player)
+            return my_pts - opp_pts
