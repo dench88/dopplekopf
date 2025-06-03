@@ -62,7 +62,7 @@ class DoppelkopfEnv(gym.Env):
             if p == self.player:
                 continue
             if random.random() < self.expectimax_prob:
-                self.opponent_agents[p] = ExpectiMaxAgent(p)
+                self.opponent_agents[p] = ExpectiMaxAgent(p, verbose=False)
             else:
                 self.opponent_agents[p] = RandomAgent()
 

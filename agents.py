@@ -206,19 +206,23 @@ class DuckFeedMixin:
                     return max(pool, key=lambda c: (c.points, c.power))
                     # pool = [c for c in losers if c.identifier != '10-hearts'] or losers
                     # choice = max(pool, key=lambda c: (c.points, c.power))
-                    print(f"    **{self.name} is last-player. Partner winning. Feed with {choice.identifier}")
+                    if self.verbose:
+                        print(f"    **{self.name} is last-player. Partner winning. Feed with {choice.identifier}")
                     # return choice
                 pool = [c for c in cards_that_are_winners if c.identifier != '10-hearts'] or cards_that_are_winners
                 choice = max(pool, key=lambda c: (c.points, c.power))
-                print(f"    **{self.name} (last-player) win trick with {choice.identifier}")
+                if self.verbose:
+                    print(f"    **{self.name} (last-player) win trick with {choice.identifier}")
                 return choice
             if partner_wins:
                 pool = [c for c in losers if c.identifier != '10-hearts'] or losers
                 choice = max(pool, key=lambda c: (c.points, c.power))
-                print(f"    **{self.name} (last-player) partner winning, feed with {choice.identifier}")
+                if self.verbose:
+                    print(f"    **{self.name} (last-player) partner winning, feed with {choice.identifier}")
                 return choice
             choice = min(losers, key=lambda c: (c.points, c.power))
-            print(f"    **{self.name} (last-player) duck cheaply with {choice.identifier}")
+            if self.verbose:
+                print(f"    **{self.name} (last-player) duck cheaply with {choice.identifier}")
             return choice
 
         # mid-trick duck if cannot win
@@ -230,10 +234,12 @@ class DuckFeedMixin:
                 if partner_wins and self.is_team_playing:
                     pool = [c for c in losers if c.identifier != '10-hearts'] or losers
                     choice = max(pool, key=lambda c: (c.points, c.power))
-                    print(f"    **{self.name} mid-trick: partner winning, feed with {choice.identifier}")
+                    if self.verbose:
+                        print(f"    **{self.name} mid-trick: partner winning, feed with {choice.identifier}")
                     return choice
                 choice = min(losers, key=lambda c: (c.points, c.power))
-                print(f"    **{self.name} mid-trick: duck cheaply with {choice.identifier}")
+                if self.verbose:
+                    print(f"    **{self.name} mid-trick: duck cheaply with {choice.identifier}")
                 return choice
         return None
 
@@ -262,7 +268,8 @@ class MinimaxAgent(DuckFeedMixin, TeamMixin):
                              state.trick_history,
                              state.current_trick)
         if fast:
-            print(f"{self.name} used fast opening rule: {fast.identifier}")
+            if self.verbose:
+                print(f"{self.name} used fast opening rule: {fast.identifier}")
             return fast
     
         if choice:
@@ -307,8 +314,9 @@ class ExpectiMaxAgent(DuckFeedMixin, TeamMixin):
     Sampling-based imperfect-information agent: for each candidate move, samples 10 possible hypothetical deals
     and runs a depth-limited perfect-information minimax, averaging scores to pick the best.
     """
-    def __init__(self, name: str, samples: int = 10, depth: int = None):
+    def __init__(self, name: str, samples: int = 10, depth: int = None, verbose=False):
         self.name = name
+        self.verbose = verbose
         self.samples = samples
         self.depth = depth
         self.is_team_playing = False  # initially selfish
@@ -324,7 +332,8 @@ class ExpectiMaxAgent(DuckFeedMixin, TeamMixin):
                              state.trick_history,
                              state.current_trick)
         if fast:
-            print(f"{self.name} used fast opening rule: {fast.identifier}")
+            if self.verbose:
+                print(f"{self.name} used fast opening rule: {fast.identifier}")
             return fast
         # duck/feed override
         choice = self._duck_or_feed(state, legal)
@@ -369,7 +378,8 @@ class ExpectiMaxAgent(DuckFeedMixin, TeamMixin):
                 )
                 scores.append(sc)
             avg = sum(scores) / len(scores)
-            tqdm.write(f"      → {action.identifier}: used {len(scores)}/{self.samples} samples, avg {avg:.2f}")
+            if self.verbose:
+                tqdm.write(f"      → {action.identifier}: used {len(scores)}/{self.samples} samples, avg {avg:.2f}")
             if avg > best_score:
                 best_score, best_moves = avg, [action]
             elif avg == best_score:
@@ -378,7 +388,8 @@ class ExpectiMaxAgent(DuckFeedMixin, TeamMixin):
         # if no best moves, return a random legal action
         if not best_moves:
             best_moves = legal
-            print(f"[WARNING] No best moves found, using random legal action.")
+            if self.verbose:
+                print(f"[WARNING] No best moves found, using random legal action.")
 
         final_choice = random.choice(best_moves)
         # print(f"[INFO] Final choice: {final_choice.identifier}")

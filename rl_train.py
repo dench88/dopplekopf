@@ -4,10 +4,10 @@ from ai import DoppelkopfEnv
 
 def main():
     # 1) Load Phase-3
-    model = DQN.load("doppelkopf_dqn_phase3")
+    model = DQN.load("doppelkopf_dqn_phase4_mixed")
 
     # 2) Create an env that’s 80% EM, 20% Random
-    env4 = Monitor(DoppelkopfEnv("ALICE", expectimax_prob=0.8), "logs/phase4/")
+    env4 = Monitor(DoppelkopfEnv("ALICE", expectimax_prob=0.9), "logs/phase4b/")
 
     # 3) Reset exploration so we still sample a bit:
     model.exploration_fraction = 0.3   # now it decays over 60 k steps, not 20 k
@@ -24,10 +24,10 @@ def main():
     model.learn(total_timesteps=50_000)
 
     # 6) Save as a new checkpoint
-    model.save("doppelkopf_dqn_phase4_mixed")
+    model.save("doppelkopf_dqn_phase5_earlyrewards")
 
     env4.close()
-    print("Phase 4 (mixed) complete; saved as phase4_mixed.")
+    print("Phase 5 (mixed) complete; saved.")
     
 if __name__ == "__main__":
     main()

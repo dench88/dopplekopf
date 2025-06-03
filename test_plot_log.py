@@ -1,5 +1,3 @@
-# evaluate_dqn.py
-
 import numpy as np
 from stable_baselines3 import DQN
 
@@ -10,8 +8,9 @@ import constants
 
 # --- Configuration ---
 RL_SEAT         = "ALICE"
-NUM_EPISODES    = 100
-EXPECTIMAX_PCT  = 0.8   # 80% of opponents will be ExpectiMax; 20% Random
+NUM_EPISODES    = 300
+# EXPECTIMAX_PCT  = 0.8   # 80% of opponents will be ExpectiMax; 20% Random
+EXPECTIMAX_PCT  = 1.0
 MODEL_PATH      = "doppelkopf_dqn_phase4_mixed.zip"  # points to doppelkopf_dqn.zip
 
 # --- Load the trained model ---
@@ -79,6 +78,8 @@ def evaluate(num_episodes=NUM_EPISODES):
 
 if __name__ == "__main__":
     avg_r, win_rt = evaluate()
-    print(f"\nOver {NUM_EPISODES} hands vs. mixed opponents:")
+    print(f"\nModel used: {MODEL_PATH}")
+    print(f"Over {NUM_EPISODES} hands vs. mixed opponents:")
+    # print(f"\nOver {NUM_EPISODES} hands vs. EM opponents:")
     print(f"  → Average (team‐pt diff)  = {avg_r:.2f}")
     print(f"  → Win rate (rewards>0)   = {win_rt*100:.1f}%\n")
