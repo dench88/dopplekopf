@@ -10,7 +10,10 @@ import constants
 # alias for clarity (optional)
 TYPES = constants.types
 SUITS = constants.suits
-
+# A) the full set of card-identifiers (48 cards, but only 24 unique ids)
+FULL_ID_SET = set(constants.CARD_POWER.keys())
+# B) a quick lookup from identifier → power
+ID_TO_POWER = constants.CARD_POWER  # already a dict identifier→int
 # build your 24 “card types” and index map
 CARD_TYPES = [(r, s) for r in TYPES for s in SUITS]
 TYPE_TO_IDX = {t: i for i, t in enumerate(CARD_TYPES)}
@@ -44,15 +47,18 @@ class DoppelkopfEnv(gym.Env):
         # Add team related flags after your suit-counts etc.
         self.team_flag_offset   = self.trick_offset + 1
         self.partner_offset     = self.team_flag_offset + 1
-        n_other_players         = len(constants.players) - 1
+        n_other_players         = 3
         obs_size = prelim_obs_size + 1 + n_other_players
 
-        self.observation_space = spaces.Box(
-            low=0,
-            high=2,                  # we’ll use 0–2 for counts
-            shape=(obs_size,),
-            dtype=np.int16
-        )
+        self.pos_offset = obs_size
+        self.winflag_offset = self.pos_offset + 1
+        self.pts_curr_trick_offset = self.winflag_offset + 1
+        self.strongest_offset = self.pts_curr_trick_offset + 1
+        self.trump_power_offset = self.strongest_offset + 1
+        self.color_offset = self.trump_power_offset + 1  # this one spans 3 dims
+        obs_size = self.color_offset + 3
+        self.observation_space = spaces.Box(0, 30, shape=(obs_size,), dtype=np.int16)
+
         self.state = None
 
     def _assign_opponents(self):
@@ -124,7 +130,6 @@ class DoppelkopfEnv(gym.Env):
         print(self.state)
 
 
-
     def _encode(self, state: GameState):
         vec = np.zeros(self.observation_space.shape[0], dtype=np.int16)
         
@@ -159,6 +164,66 @@ class DoppelkopfEnv(gym.Env):
             for i, p in enumerate(others):
                 vec[self.partner_offset + i] = 1 if p in partner_list else 0
         # else: leave those partner slots as 0
+
+        ### compute true_team exactly the same way reward does ###
+        if getattr(self, "agent", None):
+            # force team info up-to-date
+            self.agent.update_team_info(state, force=True)
+            true_team = set(self.agent.get_team_members(state))
+        else:
+            true_team = set()  # no team known
+
+        # 7) Position in current trick
+        pos = len(state.current_trick)
+        vec[self.pos_offset] = pos
+
+        # 8) Am I (or my team) winning so far?
+        if pos > 0:
+            lead_suit = state.current_trick[0][1].category
+
+            def str_fn(pair):
+                _, c = pair
+                return c.power if c.category in (lead_suit, "trumps") else -1
+
+            winner = max(state.current_trick, key=str_fn)[0]
+            vec[self.winflag_offset] = 1 if (winner in true_team) else 0
+        else:
+            vec[self.winflag_offset] = 0
+
+        # 9) Points in current trick
+        vec[self.pts_curr_trick_offset] = sum(c.points for _, c in state.current_trick)
+
+        # 10) Strongest card left in the unseen deck
+        #    Build the set of all seen identifiers
+        seen_ids = {
+                       card.identifier
+                       for trick in (*state.trick_history, state.current_trick)
+                       for _, card in trick
+                   } | {
+                       card.identifier
+                       for card in state.hands[self.player]
+                   }
+        #    The unseen identifiers are:
+        remaining_ids = FULL_ID_SET - seen_ids
+        #    Find the one with maximum power
+        if remaining_ids:
+            strongest_id = max(remaining_ids, key=lambda ident: ID_TO_POWER[ident])
+            vec[self.strongest_offset] = ID_TO_POWER[strongest_id]
+        else:
+            vec[self.strongest_offset] = 0
+
+        # 11) My remaining trump power
+        my_trumps = [c.power for c in state.hands[self.player] if c.category == "trumps"]
+        vec[self.trump_power_offset] = sum(my_trumps)
+
+        # 12) How many “color” tricks completed per suit?
+        counts = {"hearts": 0, "spades": 0, "clubs": 0}
+        for trick in state.trick_history:
+            lead = trick[0][1].category
+            if lead in counts:
+                counts[lead] += 1
+        for i, suit in enumerate(("hearts", "spades", "clubs")):
+            vec[self.color_offset + i] = counts[suit]
 
         return vec
 
