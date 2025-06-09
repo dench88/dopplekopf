@@ -4,38 +4,71 @@ from game_state import GameState
 import constants
 from agents import HumanAgent, RandomAgent, MinimaxAgent, ExpectiMaxAgent
 from determinized_mcts_agent import DeterminizedMCTSAgent
+from stable_baselines3 import PPO
+from ai import DoppelkopfEnv, TYPE_TO_IDX
 import time
 
+# —————————————————————————————————————————————————————
+# 0) Load your PPO checkpoint
+# —————————————————————————————————————————————————————
+PPO_MODEL_PATH = "doppelkopf_ppo_1M_shaped.zip"
+ppo_model = PPO.load(PPO_MODEL_PATH)
 
-agents = {
-    # "RUSTY": HumanAgent(),
-    # "ALICE": HumanAgent(),
-    # "HARLEM": HumanAgent(),
-    # "RUSTY": RandomAgent(),
-    # "ALICE": RandomAgent(),
-    # "SUSIE": RandomAgent(),
-    # "HARLEM": MinimaxAgent(depth=10),
-    # "HARLEM": MinimaxAgent("HARLEM", depth=5),
-    # "RUSTY": ExpectiMaxAgent("RUSTY", samples=5, depth=12),
-    # "SUSIE": ExpectiMaxAgent("SUSIE", samples=5, depth=12),
-    # "HARLEM": ExpectiMaxAgent("HARLEM", samples=5, depth=12),
-    # "ALICE": ExpectiMaxAgent("ALICE", samples=5, depth=12),
-    "RUSTY": ExpectiMaxAgent("RUSTY"),
-    "SUSIE": ExpectiMaxAgent("SUSIE"),
-    "HARLEM": ExpectiMaxAgent("HARLEM"),
-    "ALICE": ExpectiMaxAgent("ALICE"),
-    # "HARLEM": ExpectiMaxAgent("HARLEM", samples=10, depth=8),
-    # "ALICE": ExpectiMaxAgent("ALICE", samples=10, depth=8),
-    # "SUSIE": ExpectiMaxAgent("SUSIE", samples=10, depth=8),
-    # "RUSTY": ExpectiMaxAgent("RUSTY", samples=10, depth=8),
-    # "HARLEM": DeterminizedMCTSAgent("HARLEM", simulations=1500),
-    # "SUSIE": MinimaxAgent("SUSIE", depth=5),
-    # "SUSIE": DeterminizedMCTSAgent("SUSIE", simulations=1500),
-    # "RUSTY": DeterminizedMCTSAgent("RUSTY", simulations=1500),
-    # "ALICE": DeterminizedMCTSAgent("ALICE", simulations=1500),
-    # "ALICE": MinimaxAgent("ALICE", depth=5),
-    # "RUSTY": MinimaxAgent("RUSTY", depth=5),
-}
+# —————————————————————————————————————————————————————
+# 1) A tiny wrapper so that we can do model.predict(obs) → Card
+# —————————————————————————————————————————————————————
+class RLWrapper:
+    def __init__(self, model, seat_name, env):
+        self.model    = model
+        self.seat     = seat_name
+        self.env      = env       # store the env directly
+
+    def choose(self, state: GameState):
+        # build the obs vector from our stored env
+        obs_vec = self.env._encode(state)[None]
+
+        action_arr, _ = self.model.predict(obs_vec, deterministic=True)
+        action_idx    = int(action_arr.item())
+
+        for c in state.legal_actions():
+            if TYPE_TO_IDX[(c.type, c.suit)] == action_idx:
+                return c
+
+        return random.choice(state.legal_actions())
+
+
+
+
+
+# agents = {
+#     # "RUSTY": HumanAgent(),
+#     # "ALICE": HumanAgent(),
+#     # "HARLEM": HumanAgent(),
+#     # "RUSTY": RandomAgent(),
+#     # "ALICE": RandomAgent(),
+#     # "SUSIE": RandomAgent(),
+#     # "HARLEM": MinimaxAgent(depth=10),
+#     # "HARLEM": MinimaxAgent("HARLEM", depth=5),
+#     # "RUSTY": ExpectiMaxAgent("RUSTY", samples=5, depth=12),
+#     # "SUSIE": ExpectiMaxAgent("SUSIE", samples=5, depth=12),
+#     # "HARLEM": ExpectiMaxAgent("HARLEM", samples=5, depth=12),
+#     # "ALICE": ExpectiMaxAgent("ALICE", samples=5, depth=12),
+#     "RUSTY": ExpectiMaxAgent("RUSTY"),
+#     "SUSIE": ExpectiMaxAgent("SUSIE"),
+#     "HARLEM": ExpectiMaxAgent("HARLEM"),
+#     "ALICE": ExpectiMaxAgent("ALICE"),
+#     # "HARLEM": ExpectiMaxAgent("HARLEM", samples=10, depth=8),
+#     # "ALICE": ExpectiMaxAgent("ALICE", samples=10, depth=8),
+#     # "SUSIE": ExpectiMaxAgent("SUSIE", samples=10, depth=8),
+#     # "RUSTY": ExpectiMaxAgent("RUSTY", samples=10, depth=8),
+#     # "HARLEM": DeterminizedMCTSAgent("HARLEM", simulations=1500),
+#     # "SUSIE": MinimaxAgent("SUSIE", depth=5),
+#     # "SUSIE": DeterminizedMCTSAgent("SUSIE", simulations=1500),
+#     # "RUSTY": DeterminizedMCTSAgent("RUSTY", simulations=1500),
+#     # "ALICE": DeterminizedMCTSAgent("ALICE", simulations=1500),
+#     # "ALICE": MinimaxAgent("ALICE", depth=5),
+#     # "RUSTY": MinimaxAgent("RUSTY", depth=5),
+# }
 
 def find_first_player():
     return random.choice(list(constants.players.keys()))
@@ -147,53 +180,117 @@ def play_game(state: GameState, render_func=None):
 
 
 
-
+#
+#
+# if __name__ == "__main__":
+#     state = make_initial_state()
+#     # — ADDED: print every player’s opening hand once —
+#     print("Initial hands:")
+#     for player, hand in state.hands.items():
+#         # sort by power so it’s readable
+#         sorted_ids = [c.identifier for c in sorted(hand, key=lambda c: c.power)]
+#         print(f"  {player}: {sorted_ids}")
+#     print("====================================================")
+#     # Start timer
+#     start = time.time()
+#
+#     final_state = play_game(state, render)
+#     print("\nGame over! Final points:", final_state.points)
+#     # End timer
+#     end = time.time()
+#     print(f"\nGame runtime: {end - start:.2f} seconds")
+#
+#     print("\nGame over! Final points:", final_state.points)
+#
+#     # After printing final_state.points:
+#     # Compute team totals from the completed tricks
+#     qc_public = [
+#         player
+#         for trick in final_state.trick_history
+#         for player, card in trick
+#         if card.identifier == 'Q-clubs'
+#     ]
+#     # Dedupe in play order
+#     qc_public = list(dict.fromkeys(qc_public))
+#     team_no_qc = [p for p in final_state.points if p not in qc_public]
+#     qc_pts = sum(final_state.points[p] for p in qc_public)
+#     no_qc_pts = sum(final_state.points[p] for p in team_no_qc)
+#
+#     # figure out who the two Q-club holders are
+#     qc_members = {
+#         player
+#         for trick in final_state.trick_history
+#         for player, card in trick
+#         if card.identifier == 'Q-clubs'
+#     }
+#     # the other two are the non-holders
+#     non_qc_members = [p for p in constants.players if p not in qc_members]
+#
+#     # print with membership
+#     print(f"Team Q-clubs ({', '.join(qc_members)}): Total points: {qc_pts}")
+#     print(f"Team non-Q-clubs ({', '.join(non_qc_members)}): Total points: {no_qc_pts}")
+#
+#     print("\nGame summary:")
+#     for i, trick in enumerate(final_state.trick_history, 1):
+#         trick_summary = {player: card.identifier for player, card in trick}
+#         print(f"Trick {i}: {trick_summary}")
 
 if __name__ == "__main__":
+    # —————————— INSERT HERE: “Attach ALICE → RLWrapper” ——————————
+    # We need to let RLWrapper access env._encode(state), so we do a tiny trick:
+    #   1) Create a throwaway DoppelkopfEnv (only to get its obs‐dim and assign `state.env`)
+    env = DoppelkopfEnv("ALICE", expectimax_prob=1.0)
+    rl_agent = RLWrapper(ppo_model, "ALICE", env)
+    # We’ll overwrite state.env for every new GameState inside play_game via this dummy:
+    # (The code below, right after make_initial_state, will ensure state.env = dummy_env.)
+
+    # --------------------------------------------------------------------------
+    agents = {
+        "RUSTY": HumanAgent(),
+        "SUSIE": ExpectiMaxAgent("SUSIE"),
+        "HARLEM": ExpectiMaxAgent("HARLEM"),
+        "ALICE": rl_agent
+    }
+
+    # --------------------------------------------------------------------------
+
+    # Now deal a hand and play:
     state = make_initial_state()
-    # — ADDED: print every player’s opening hand once —
+
+
     print("Initial hands:")
     for player, hand in state.hands.items():
-        # sort by power so it’s readable
         sorted_ids = [c.identifier for c in sorted(hand, key=lambda c: c.power)]
         print(f"  {player}: {sorted_ids}")
     print("====================================================")
-    # Start timer
+
     start = time.time()
-
     final_state = play_game(state, render)
-    print("\nGame over! Final points:", final_state.points)
-    # End timer
     end = time.time()
-    print(f"\nGame runtime: {end - start:.2f} seconds")
 
     print("\nGame over! Final points:", final_state.points)
+    print(f"Game runtime: {end - start:.2f} seconds\n")
 
-    # After printing final_state.points:
-    # Compute team totals from the completed tricks
+    # Compute final teams and totals as before:
     qc_public = [
         player
         for trick in final_state.trick_history
         for player, card in trick
         if card.identifier == 'Q-clubs'
     ]
-    # Dedupe in play order
     qc_public = list(dict.fromkeys(qc_public))
     team_no_qc = [p for p in final_state.points if p not in qc_public]
-    qc_pts = sum(final_state.points[p] for p in qc_public)
+    qc_pts    = sum(final_state.points[p] for p in qc_public)
     no_qc_pts = sum(final_state.points[p] for p in team_no_qc)
 
-    # figure out who the two Q-club holders are
-    qc_members = {
+    qc_members    = {
         player
         for trick in final_state.trick_history
         for player, card in trick
         if card.identifier == 'Q-clubs'
     }
-    # the other two are the non-holders
     non_qc_members = [p for p in constants.players if p not in qc_members]
 
-    # print with membership
     print(f"Team Q-clubs ({', '.join(qc_members)}): Total points: {qc_pts}")
     print(f"Team non-Q-clubs ({', '.join(non_qc_members)}): Total points: {no_qc_pts}")
 
@@ -201,4 +298,3 @@ if __name__ == "__main__":
     for i, trick in enumerate(final_state.trick_history, 1):
         trick_summary = {player: card.identifier for player, card in trick}
         print(f"Trick {i}: {trick_summary}")
-

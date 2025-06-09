@@ -11,7 +11,7 @@ import constants
 # Configuration
 # ————————————————
 RL_SEAT         = "ALICE"                    # Seat controlled by our trained agent
-NUM_EPISODES    = 300                        # Number of hands to simulate
+NUM_EPISODES    = 30                        # Number of hands to simulate
 EXPECTIMAX_PCT  = 1.0                       # Probability each opponent is ExpectiMax (else Random)
 MODEL_PATH      = "doppelkopf_ppo_1M_shaped.zip"  # Path to your PPO checkpoint
 
