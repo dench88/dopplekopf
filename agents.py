@@ -1,6 +1,6 @@
 import random
 import math
-from typing import List
+from typing import List, Optional
 from game_state import GameState
 from form_deck import Card
 from input_utils import human_play_logic
@@ -8,6 +8,7 @@ from heuristics import evaluate
 import constants
 from tqdm import tqdm
 from typing import Optional
+
 
 
 class HumanAgent:
@@ -244,6 +245,51 @@ class DuckFeedMixin:
         return None
 
 
+class HeuristicRandomAgent(DuckFeedMixin, TeamMixin):
+    """
+    Fast heuristic agent:
+      1) On trick 1 opening: play fast_opening_play()
+      2) Mid‐trick: duck/feed via DuckFeedMixin._duck_or_feed()
+      3) Otherwise: random legal card
+    """
+    def __init__(self, name: str, verbose: bool = False):
+        self.name            = name
+        self.verbose         = verbose
+        self.is_team_playing = False
+        self.team_members    = None
+
+    def choose(self, state: GameState) -> Card:
+        # 1) Update partner info (TeamMixin)
+        self.update_team_info(state)
+
+        legal = state.legal_actions()
+
+        # 2) Fast‐opening rule (only very first play of first trick)
+        fast = fast_opening_play(
+            self.name,
+            state.hands,
+            state.trick_history,
+            state.current_trick
+        )
+        if fast:
+            if self.verbose:
+                print(f"{self.name} used fast‐opening: {fast.identifier}")
+            return fast
+
+        # 3) Duck or feed mid‐trick if that logic applies
+        duck_or_feed = self._duck_or_feed(state, legal)
+        if duck_or_feed:
+            if self.verbose:
+                print(f"{self.name} duck/feed choice: {duck_or_feed.identifier}")
+            return duck_or_feed
+
+        # 4) Fallback: uniform random among legal
+        choice = random.choice(legal)
+        if self.verbose:
+            print(f"{self.name} random fallback → {choice.identifier}")
+        return choice
+
+
 class MinimaxAgent(DuckFeedMixin, TeamMixin):
     """
     Perfect-information minimax with alpha-beta pruning, maximizing team or individual score.
@@ -342,7 +388,7 @@ class ExpectiMaxAgent(DuckFeedMixin, TeamMixin):
         # sampling + minimax
         depth = self.depth if self.depth is not None else (len(constants.players) - len(state.current_trick))
         best_moves, best_score = [], -math.inf
-        seen = set()
+        # seen = set()
         # for action in tqdm(state.legal_actions(), desc="Root actions", leave=True, disable=True):
         #     if action.identifier in seen:
         #         continue

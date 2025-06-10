@@ -2,7 +2,7 @@ import random
 from form_deck import create_deck
 from game_state import GameState
 import constants
-from agents import HumanAgent, RandomAgent, MinimaxAgent, ExpectiMaxAgent
+from agents import HumanAgent, RandomAgent, MinimaxAgent, ExpectiMaxAgent, HeuristicRandomAgent
 from determinized_mcts_agent import DeterminizedMCTSAgent
 from stable_baselines3 import PPO
 from ai import DoppelkopfEnv, TYPE_TO_IDX
@@ -11,7 +11,7 @@ import time
 # —————————————————————————————————————————————————————
 # 0) Load your PPO checkpoint
 # —————————————————————————————————————————————————————
-PPO_MODEL_PATH = "doppelkopf_ppo_1M_shaped.zip"
+PPO_MODEL_PATH = "doppelkopf_ppo_1M_shaped_A.zip"
 ppo_model = PPO.load(PPO_MODEL_PATH)
 
 # —————————————————————————————————————————————————————
@@ -247,9 +247,10 @@ if __name__ == "__main__":
     # --------------------------------------------------------------------------
     agents = {
         "RUSTY": HumanAgent(),
-        "SUSIE": ExpectiMaxAgent("SUSIE"),
+        "SUSIE": HeuristicRandomAgent("SUSIE"),
         "HARLEM": ExpectiMaxAgent("HARLEM"),
-        "ALICE": rl_agent
+        # "ALICE": rl_agent,
+        "ALICE": HeuristicRandomAgent("ALICE")
     }
 
     # --------------------------------------------------------------------------
