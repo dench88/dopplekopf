@@ -3,12 +3,10 @@
 import os
 import argparse
 from functools import partial
-
 import numpy as np
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import SubprocVecEnv, VecMonitor
 from stable_baselines3.common.callbacks import BaseCallback, CheckpointCallback
-
 from ai import DoppelkopfEnv
 from agents import ExpectiMaxAgent, RandomAgent, HeuristicRandomAgent
 import constants
@@ -21,42 +19,42 @@ def parse_args():
     return p.parse_args()
 
 # ─────────────────────────────────────────────────────────────────────────────
-def make_env(rank: int, mix: dict[str,float]):
-    """
-    Returns a thunk that creates one DoppelkopfEnv instance.
-    mix maps agent‐type→fraction, e.g. {"random":0.5, "heur":0.5, "em":0.0}.
-    """
-    types, freqs = zip(*mix.items())
+def make_env(rank: int, agent_mix: dict[str, float]):
+    agent_classes = {
+        "random": RandomAgent,
+        "heur":   HeuristicRandomAgent,
+        "em":     ExpectiMaxAgent
+    }
+    types, freqs = zip(*agent_mix.items())
     cum = np.cumsum(freqs)
+    assert abs(cum[-1] - 1.0) < 1e-8, "Probabilities must sum to 1.0"
 
     def _init():
-        env = DoppelkopfEnv("ALICE", expectimax_prob=0.0)
-        env.agent = ExpectiMaxAgent("ALICE")  # needed for team flags
-
-        # assign opponent agents
+        env = DoppelkopfEnv("ALICE", expectimax_prob=0.0, custom_opponents=True)
+        env.agent = ExpectiMaxAgent("ALICE")
         env.opponent_agents.clear()
+        assignments = []
         for p in constants.players:
             if p == "ALICE":
                 continue
             r = np.random.rand()
-            if r < cum[0] and types[0]=="random":
-                env.opponent_agents[p] = RandomAgent()
-            elif r < cum[0] and types[0]=="heur":
-                env.opponent_agents[p] = HeuristicRandomAgent(p)
-            else:
-                # find which bucket
-                for t, c in zip(types, cum):
-                    if r < c:
-                        if t=="random":
-                            env.opponent_agents[p] = RandomAgent()
-                        elif t=="heur":
-                            env.opponent_agents[p] = HeuristicRandomAgent(p)
-                        else:
-                            env.opponent_agents[p] = ExpectiMaxAgent(p)
-                        break
-        return env
+            for t, c in zip(types, cum):
+                if r < c:
+                    if t == "heur":
+                        env.opponent_agents[p] = agent_classes[t](p)
+                    elif t == "em":
+                        env.opponent_agents[p] = agent_classes[t](p)
+                    else:
+                        # random agent takes no arguments
+                        env.opponent_agents[p] = agent_classes[t]()
+                    assignments.append((p, agent_classes[t].__name__))
+                    break
+            print(f"[ENV {rank}] Opponent agents: {assignments}")
+            return env
 
     return _init
+
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 class EvalCallback(BaseCallback):
@@ -80,8 +78,18 @@ class EvalCallback(BaseCallback):
                     action, _ = self.model.predict(obs, deterministic=True)
                     obs, rewards, dones, _, _ = self.eval_env.step(action)
                     done = dones[0]
-                if rewards[0] > 0:
+
+                # After the episode is done, get the final state from the env
+                final_state = self.eval_env.envs[0].state  # For SubprocVecEnv or DummyVecEnv, access the single env
+                agent = self.eval_env.envs[0].agent  # Your ExpectiMaxAgent or whatever is attached for team info
+
+                # Find your team at game end
+                team = agent.get_team_members(final_state)
+                team_pts = sum(final_state.points[p] for p in team)
+                opp_pts = sum(v for p, v in final_state.points.items() if p not in team)
+                if team_pts > opp_pts:
                     wins += 1
+
                 total += 1
 
             win_rate = wins / total * 100.0
@@ -100,15 +108,15 @@ def main():
     if args.phase == 1:
         # Phase 1: scratch, 100k, 50% random / 50% heuristic
         load_path    = None
-        save_path    = "ppo_phase1"
-        timesteps    = 100_000
-        opponent_mix = {"random":0.5, "heur":0.5, "em":0.0}
+        save_path    = "ppo_phase1D"
+        timesteps    = 1_000_000
+        opponent_mix = {"random": 0.4, "heur": 0.6, "em": 0.0}
     else:
         # Phase 2: warm start from Phase 1, 200k, 20% random / 40% heur / 40% EM
-        load_path    = "ppo_phase1.zip"
-        save_path    = "ppo_phase2"
+        load_path    = "ppo_phase_20D.zip"
+        save_path    = "ppo_phase_21D"
         timesteps    = 200_000
-        opponent_mix = {"random":0.2, "heur":0.4, "em":0.4}
+        opponent_mix = {"random": 0.05, "heur": 0.05, "em": 0.9}
 
     num_cpu = max(1, os.cpu_count() - 1)
 
@@ -132,13 +140,13 @@ def main():
             ent_coef=0.01,
             verbose=1,
             tensorboard_log="./ppo_tensorboard/",
-            policy_kwargs=dict(net_arch=[256,256]),
+            policy_kwargs=dict(net_arch=[256, 256]),
             device="auto",
         )
         print("Starting training from scratch…")
 
     # 3) Eval callback (100% EM)
-    eval_env_fns = [make_env(i, {"random":0.0,"heur":0.0,"em":1.0}) for i in range(4)]
+    eval_env_fns = [make_env(i, {"random": 0.0, "heur": 0.0, "em": 1.0}) for i in range(4)]
     eval_cb      = EvalCallback(eval_env_fns, eval_freq=100_000, n_eval_episodes=50)
 
     # 4) Optional checkpointing every 100k timesteps

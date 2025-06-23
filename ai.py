@@ -19,14 +19,17 @@ CARD_TYPES = [(r, s) for r in TYPES for s in SUITS]
 TYPE_TO_IDX = {t: i for i, t in enumerate(CARD_TYPES)}
 
 class DoppelkopfEnv(gym.Env):
-    def __init__(self, player_name: str, expectimax_prob: float = 0.85):
+    def __init__(self, player_name: str, expectimax_prob: float = 0.85, custom_opponents: bool = False):
         super().__init__()
         self.player = player_name
         self.agent = None
         # Expectimax opponents
         self.opponent_agents = {}
         self.expectimax_prob = expectimax_prob
-        self._assign_opponents()
+        # self._assign_opponents()
+        self.custom_opponents = custom_opponents
+        if not self.custom_opponents:
+            self._assign_opponents()
 
         # — your existing hand/action setup —
         # CARD_TYPES   = [(r,s) for r in RANKS for s in SUITS]   # 24 types
@@ -83,7 +86,9 @@ class DoppelkopfEnv(gym.Env):
 
         # 3) (Re‐)assign opponents if you rotate them per episode
         if hasattr(self, "_assign_opponents"):
-            self._assign_opponents()
+            # self._assign_opponents()
+            if not self.custom_opponents and hasattr(self, "_assign_opponents"):
+                self._assign_opponents()
 
         # 4) Force team‐info update if you attach a rule‐based agent
         if getattr(self, "agent", None):
@@ -267,16 +272,27 @@ class DoppelkopfEnv(gym.Env):
                 # Figure out which two players are on ALICE’s team right now
                 if getattr(self, "agent", None):
                     team = self.agent.get_team_members(new)
+                    teams_known = getattr(self.agent, "is_team_playing", False)
                 else:
                     team = []
+                    teams_known = False
 
                 # If the trick‐winner is on ALICE’s team, give +trick_pts; otherwise –trick_pts
-                return trick_pts if (winner in team) else -trick_pts
+                # return trick_pts if (winner in team) else -trick_pts
+
+                # Trick won by my team
+                if winner in team:
+                    return trick_pts
+                # Trick lost and teams known → regular penalty
+                if teams_known:
+                    return -trick_pts
+                # Trick lost and teams unknown → expected penalty
+                return -trick_pts / 3
 
             # If no trick was just completed (e.g. mid‐trick), give zero intermediate reward
             return 0
 
-        # 2) If we reach here, new.is_terminal() == True → the entire hand is over
+        # 2) If the entire hand is over
         #    Now give the final “team‐point differential” exactly as before.
 
         if getattr(self, "agent", None):

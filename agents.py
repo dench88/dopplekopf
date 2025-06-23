@@ -133,44 +133,39 @@ class TeamMixin:
             
             return
 
+
     def get_team_members(self, state: GameState) -> List[str]:
         """
-        Returns the two names on my side once I know my team,
-        or None if I’m still in “selfish” (pre-team) mode.
+        Returns the full team for the agent at game end.
         """
-        # who’s played Q-clubs so far?
-        qc_public = {
-            p
-            for trick in state.trick_history
-            for p, c in trick
-            if c.identifier == "Q-clubs"
-        } | {
-            p
-            for p, c in state.current_trick
-            if c.identifier == "Q-clubs"
-        }
-
-        # who still holds a Q-clubs in hand?
-        holders = {
-            p
-            for p, hand in state.hands.items()
+        # Find all Q-club holders at game end (in hands + all played)
+        qc_holders = set(
+            p for trick in state.trick_history
+            for p, c in trick if c.identifier == "Q-clubs"
+        )
+        qc_holders |= set(
+            p for p, hand in state.hands.items()
             if any(c.identifier == "Q-clubs" for c in hand)
-        }
+        )
 
-        # once I’m in holders or both seen, reveal full teams
-        if self.name in holders or len(qc_public) == 2:
-            qc_public |= holders
-
-        # if I haven’t switched to team play yet, nobody’s shown
-        if not getattr(self, "is_team_playing", False):
-            return []
-
-        # pick my side
         all_players = set(state.hands)
-        if self.name in qc_public:
-            return sorted(qc_public)
-        else:
-            return sorted(all_players - qc_public)
+        # --- SOLO CASE: Both Q-clubs in one hand ---
+        if len(qc_holders) == 1:
+            # One player holds both Q-clubs: that player solos vs the rest
+            soloist = next(iter(qc_holders))
+            if self.name == soloist:
+                return [soloist]
+            else:
+                return sorted(all_players - {soloist})
+        # --- NORMAL CASE: Two Q-club holders ---
+        elif len(qc_holders) == 2:
+            if self.name in qc_holders:
+                return sorted(qc_holders)
+            else:
+                return sorted(all_players - qc_holders)
+        # Fallback: unknown (should not happen at end)
+        return []
+
 
 class DuckFeedMixin:
     """
@@ -366,7 +361,6 @@ class ExpectiMaxAgent(DuckFeedMixin, TeamMixin):
         self.samples = samples
         self.depth = depth
         self.is_team_playing = False  # initially selfish
-
 
 
     def choose(self, state: GameState) -> Card:

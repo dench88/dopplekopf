@@ -11,7 +11,8 @@ import time
 # —————————————————————————————————————————————————————
 # 0) Load your PPO checkpoint
 # —————————————————————————————————————————————————————
-PPO_MODEL_PATH = "doppelkopf_ppo_1M_shaped_A.zip"
+# PPO_MODEL_PATH = "doppelkopf_ppo_1M_shaped_A.zip"
+PPO_MODEL_PATH = ("ppo_phase4D.zip")
 ppo_model = PPO.load(PPO_MODEL_PATH)
 
 # —————————————————————————————————————————————————————
@@ -35,9 +36,6 @@ class RLWrapper:
                 return c
 
         return random.choice(state.legal_actions())
-
-
-
 
 
 # agents = {
@@ -180,60 +178,6 @@ def play_game(state: GameState, render_func=None):
 
 
 
-#
-#
-# if __name__ == "__main__":
-#     state = make_initial_state()
-#     # — ADDED: print every player’s opening hand once —
-#     print("Initial hands:")
-#     for player, hand in state.hands.items():
-#         # sort by power so it’s readable
-#         sorted_ids = [c.identifier for c in sorted(hand, key=lambda c: c.power)]
-#         print(f"  {player}: {sorted_ids}")
-#     print("====================================================")
-#     # Start timer
-#     start = time.time()
-#
-#     final_state = play_game(state, render)
-#     print("\nGame over! Final points:", final_state.points)
-#     # End timer
-#     end = time.time()
-#     print(f"\nGame runtime: {end - start:.2f} seconds")
-#
-#     print("\nGame over! Final points:", final_state.points)
-#
-#     # After printing final_state.points:
-#     # Compute team totals from the completed tricks
-#     qc_public = [
-#         player
-#         for trick in final_state.trick_history
-#         for player, card in trick
-#         if card.identifier == 'Q-clubs'
-#     ]
-#     # Dedupe in play order
-#     qc_public = list(dict.fromkeys(qc_public))
-#     team_no_qc = [p for p in final_state.points if p not in qc_public]
-#     qc_pts = sum(final_state.points[p] for p in qc_public)
-#     no_qc_pts = sum(final_state.points[p] for p in team_no_qc)
-#
-#     # figure out who the two Q-club holders are
-#     qc_members = {
-#         player
-#         for trick in final_state.trick_history
-#         for player, card in trick
-#         if card.identifier == 'Q-clubs'
-#     }
-#     # the other two are the non-holders
-#     non_qc_members = [p for p in constants.players if p not in qc_members]
-#
-#     # print with membership
-#     print(f"Team Q-clubs ({', '.join(qc_members)}): Total points: {qc_pts}")
-#     print(f"Team non-Q-clubs ({', '.join(non_qc_members)}): Total points: {no_qc_pts}")
-#
-#     print("\nGame summary:")
-#     for i, trick in enumerate(final_state.trick_history, 1):
-#         trick_summary = {player: card.identifier for player, card in trick}
-#         print(f"Trick {i}: {trick_summary}")
 
 if __name__ == "__main__":
     # —————————— INSERT HERE: “Attach ALICE → RLWrapper” ——————————
@@ -246,18 +190,21 @@ if __name__ == "__main__":
 
     # --------------------------------------------------------------------------
     agents = {
-        "RUSTY": HumanAgent(),
-        "SUSIE": HeuristicRandomAgent("SUSIE"),
+        # "RUSTY": HumanAgent(),
+        "SUSIE": ExpectiMaxAgent("SUSIE"),
+        "RUSTY": ExpectiMaxAgent("RUSTY"),
         "HARLEM": ExpectiMaxAgent("HARLEM"),
         # "ALICE": rl_agent,
-        "ALICE": HeuristicRandomAgent("ALICE")
+        # "ALICE": HeuristicRandomAgent("ALICE"),
+        # "RUSTY": rl_agent,
+        # "SUSIE": rl_agent,
+        # "HARLEM": rl_agent,
+        # "ALICE": rl_agent,
+        "ALICE": rl_agent
     }
 
     # --------------------------------------------------------------------------
-
-    # Now deal a hand and play:
     state = make_initial_state()
-
 
     print("Initial hands:")
     for player, hand in state.hands.items():
