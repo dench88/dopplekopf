@@ -82,11 +82,11 @@ def fast_opening_play(agent_name: str,
 
 class TeamMixin:
     def update_team_info(self, state: GameState, *, force=False):
-        # only at trick boundary unless forced
+        # only update at trick boundary unless forced
         if state.current_trick and not force:
             return
 
-        # 1) who’s played a Q-clubs?
+        # Publicly played Q-clubs
         played = {
             p
             for trick in state.trick_history
@@ -98,73 +98,86 @@ class TeamMixin:
             if c.identifier == 'Q-clubs'
         }
 
-        # 2) who still holds one?
+        # Players who still hold a Q-clubs in hand
         still_holds = {
             p
-            for p, h in state.hands.items()
-            if any(c.identifier == 'Q-clubs' for c in h)
+            for p, hand in state.hands.items()
+            if any(c.identifier == 'Q-clubs' for c in hand)
         }
 
-        original_holders = played | still_holds
+        # All Q-club holders (played or still holding)
+        holders = played | still_holds
 
-        # A) no Qs seen → nobody knows
+        # SOLO CASE: one player holds both Q-clubs → soloist vs the other three
+        if len(holders) == 1:
+            soloist = next(iter(holders))
+            self.is_team_playing = True
+            if self.name == soloist:
+                # soloist plays alone
+                self.team_members = [soloist]
+            else:
+                # the other three form the opposing team
+                opponents = set(state.hands) - {soloist}
+                self.team_members = sorted(opponents)
+            return
+
+        # NO Qs seen: still no team info
         if len(played) == 0:
             self.is_team_playing = False
             self.team_members = None
             return
 
-        # B) exactly one seen → only the *other* holder (still_holds) learns
+        # Exactly one Q played: only the other holder learns the partner
         if len(played) == 1:
-            # if *I* still hold a Q (i.e. I didn't just play it),
-            # then I now know my partner
             if self.name in still_holds:
                 self.is_team_playing = True
-                self.team_members = sorted(original_holders)
+                self.team_members = sorted(holders)
             return
 
-        # C) both Qs seen → everyone learns
+        # Both Qs have been played: full team revealed to all
         if len(played) == 2:
             self.is_team_playing = True
-            non_holders = set(state.hands) - original_holders
-            if self.name in original_holders:
-                self.team_members = sorted(original_holders)
+            non_holders = set(state.hands) - holders
+            if self.name in holders:
+                self.team_members = sorted(holders)
             else:
                 self.team_members = sorted(non_holders)
-            
             return
-
 
     def get_team_members(self, state: GameState) -> List[str]:
         """
         Returns the full team for the agent at game end.
         """
-        # Find all Q-club holders at game end (in hands + all played)
-        qc_holders = set(
-            p for trick in state.trick_history
-            for p, c in trick if c.identifier == "Q-clubs"
-        )
-        qc_holders |= set(
-            p for p, hand in state.hands.items()
-            if any(c.identifier == "Q-clubs" for c in hand)
-        )
+        # Identify all holders (played or still in hand)
+        qc_holders = {
+            p
+            for trick in state.trick_history
+            for p, c in trick
+            if c.identifier == 'Q-clubs'
+        } | {
+            p
+            for p, hand in state.hands.items()
+            if any(c.identifier == 'Q-clubs' for c in hand)
+        }
 
         all_players = set(state.hands)
-        # --- SOLO CASE: Both Q-clubs in one hand ---
+        # SOLO CASE: one holder → soloist vs others
         if len(qc_holders) == 1:
-            # One player holds both Q-clubs: that player solos vs the rest
             soloist = next(iter(qc_holders))
             if self.name == soloist:
                 return [soloist]
             else:
                 return sorted(all_players - {soloist})
-        # --- NORMAL CASE: Two Q-club holders ---
+        # NORMAL CASE: two holders → two teams of two
         elif len(qc_holders) == 2:
             if self.name in qc_holders:
                 return sorted(qc_holders)
             else:
                 return sorted(all_players - qc_holders)
-        # Fallback: unknown (should not happen at end)
+        # Fallback (should not occur)
         return []
+
+
 
 
 class DuckFeedMixin:

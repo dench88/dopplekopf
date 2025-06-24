@@ -1,6 +1,7 @@
 import random
 from form_deck import create_deck
 from game_state import GameState
+from input_utils import get_qc_split_and_points
 import constants
 from agents import HumanAgent, RandomAgent, MinimaxAgent, ExpectiMaxAgent, HeuristicRandomAgent
 from determinized_mcts_agent import DeterminizedMCTSAgent
@@ -117,7 +118,9 @@ def render(state, last_trick):
     print("Playable cards:", " ".join(c.identifier for c in playable))
 
 
-def play_game(state: GameState, render_func=None):
+# def play_game(state: GameState, render_func=None):
+def play_game(state: GameState, agents: dict[str, any], render_func=None):
+
     last_trick = None
     while not state.is_terminal():
         print(f"TRICK {len(state.trick_history)+1}; Ply {len(state.current_trick)+1} of 4")
@@ -180,32 +183,20 @@ def play_game(state: GameState, render_func=None):
 
 
 if __name__ == "__main__":
-    # —————————— INSERT HERE: “Attach ALICE → RLWrapper” ——————————
-    # We need to let RLWrapper access env._encode(state), so we do a tiny trick:
-    #   1) Create a throwaway DoppelkopfEnv (only to get its obs‐dim and assign `state.env`)
     env = DoppelkopfEnv("ALICE", expectimax_prob=1.0)
     rl_agent = RLWrapper(ppo_model, "ALICE", env)
-    # We’ll overwrite state.env for every new GameState inside play_game via this dummy:
-    # (The code below, right after make_initial_state, will ensure state.env = dummy_env.)
-
-    # --------------------------------------------------------------------------
     agents = {
         # "RUSTY": HumanAgent(),
         "SUSIE": ExpectiMaxAgent("SUSIE"),
         "RUSTY": ExpectiMaxAgent("RUSTY"),
         "HARLEM": ExpectiMaxAgent("HARLEM"),
-        # "ALICE": rl_agent,
         # "ALICE": HeuristicRandomAgent("ALICE"),
         # "RUSTY": rl_agent,
         # "SUSIE": rl_agent,
         # "HARLEM": rl_agent,
-        # "ALICE": rl_agent,
         "ALICE": rl_agent
     }
-
-    # --------------------------------------------------------------------------
     state = make_initial_state()
-
     print("Initial hands:")
     for player, hand in state.hands.items():
         sorted_ids = [c.identifier for c in sorted(hand, key=lambda c: c.power)]
@@ -213,34 +204,17 @@ if __name__ == "__main__":
     print("====================================================")
 
     start = time.time()
-    final_state = play_game(state, render)
+    final_state = play_game(state, agents, render)
     end = time.time()
 
     print("\nGame over! Final points:", final_state.points)
     print(f"Game runtime: {end - start:.2f} seconds\n")
 
     # Compute final teams and totals as before:
-    qc_public = [
-        player
-        for trick in final_state.trick_history
-        for player, card in trick
-        if card.identifier == 'Q-clubs'
-    ]
-    qc_public = list(dict.fromkeys(qc_public))
-    team_no_qc = [p for p in final_state.points if p not in qc_public]
-    qc_pts    = sum(final_state.points[p] for p in qc_public)
-    no_qc_pts = sum(final_state.points[p] for p in team_no_qc)
+    qc_team, non_qc_team, qc_pts, non_qc_pts = get_qc_split_and_points(final_state)
 
-    qc_members    = {
-        player
-        for trick in final_state.trick_history
-        for player, card in trick
-        if card.identifier == 'Q-clubs'
-    }
-    non_qc_members = [p for p in constants.players if p not in qc_members]
-
-    print(f"Team Q-clubs ({', '.join(qc_members)}): Total points: {qc_pts}")
-    print(f"Team non-Q-clubs ({', '.join(non_qc_members)}): Total points: {no_qc_pts}")
+    print(f"Team Q-clubs ({', '.join(qc_team)}): Total points: {qc_pts}")
+    print(f"Team non-Q-clubs ({', '.join(non_qc_team)}): Total points: {non_qc_pts}")
 
     print("\nGame summary:")
     for i, trick in enumerate(final_state.trick_history, 1):
