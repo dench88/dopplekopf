@@ -38,28 +38,18 @@ class DoppelkopfEnv(gym.Env):
 
         # record where each slice begins
         self.hand_offset  = 0
-        self.seen_offset  = hand_size
-        self.points_offset = hand_size + hand_size
-        self.trick_offset  = self.points_offset + len(constants.players)
-        #Remove trick suit lengths from obs vector
-        # self.suit_offset   = self.trick_offset + 1
-
-        # total obs = hand_counts + seen_counts + player_pts + trick_cnt + suit_lengths(3)
-        prelim_obs_size = hand_size + hand_size + len(constants.players) + 1
-
-        # Add team related flags after your suit-counts etc.
-        self.team_flag_offset   = self.trick_offset + 1
-        self.partner_offset     = self.team_flag_offset + 1
-        n_other_players         = 3
-        obs_size = prelim_obs_size + 1 + n_other_players
-
-        self.pos_offset = obs_size
-        self.winflag_offset = self.pos_offset + 1
-        self.pts_curr_trick_offset = self.winflag_offset + 1
-        self.strongest_offset = self.pts_curr_trick_offset + 1
-        self.trump_power_offset = self.strongest_offset + 1
-        self.color_offset = self.trump_power_offset + 1  # this one spans 3 dims
-        obs_size = self.color_offset + 3
+        self.seen_offset  = hand_size #24
+        self.points_offset = hand_size + hand_size #48
+        self.trick_offset  = self.points_offset + len(constants.players) #52
+        self.team_flag_offset   = self.trick_offset + 1 #53
+        self.partner_offset     = self.team_flag_offset + 1 #54
+        self.pos_offset = self.partner_offset + 3 #57; 3 OTHER PLAYERS
+        self.winflag_offset = self.pos_offset + 1 #58
+        self.pts_curr_trick_offset = self.winflag_offset + 1 #59
+        self.strongest_offset = self.pts_curr_trick_offset + 1 #60
+        self.trump_power_offset = self.strongest_offset + 1 #61
+        self.color_offset = self.trump_power_offset + 1  # 62
+        obs_size = self.color_offset + 3 #65
         self.observation_space = spaces.Box(0, 30, shape=(obs_size,), dtype=np.int16)
 
         self.state = None

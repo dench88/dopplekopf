@@ -13,8 +13,7 @@ import time
 # 0) Load your PPO checkpoint
 # —————————————————————————————————————————————————————
 # PPO_MODEL_PATH = "doppelkopf_ppo_1M_shaped_A.zip"
-PPO_MODEL_PATH = ("ppo_phase4D.zip")
-ppo_model = PPO.load(PPO_MODEL_PATH)
+
 
 # —————————————————————————————————————————————————————
 # 1) A tiny wrapper so that we can do model.predict(obs) → Card
@@ -41,32 +40,9 @@ class RLWrapper:
 
 # agents = {
 #     # "RUSTY": HumanAgent(),
-#     # "ALICE": HumanAgent(),
-#     # "HARLEM": HumanAgent(),
-#     # "RUSTY": RandomAgent(),
-#     # "ALICE": RandomAgent(),
 #     # "SUSIE": RandomAgent(),
-#     # "HARLEM": MinimaxAgent(depth=10),
-#     # "HARLEM": MinimaxAgent("HARLEM", depth=5),
-#     # "RUSTY": ExpectiMaxAgent("RUSTY", samples=5, depth=12),
-#     # "SUSIE": ExpectiMaxAgent("SUSIE", samples=5, depth=12),
-#     # "HARLEM": ExpectiMaxAgent("HARLEM", samples=5, depth=12),
-#     # "ALICE": ExpectiMaxAgent("ALICE", samples=5, depth=12),
 #     "RUSTY": ExpectiMaxAgent("RUSTY"),
-#     "SUSIE": ExpectiMaxAgent("SUSIE"),
-#     "HARLEM": ExpectiMaxAgent("HARLEM"),
-#     "ALICE": ExpectiMaxAgent("ALICE"),
-#     # "HARLEM": ExpectiMaxAgent("HARLEM", samples=10, depth=8),
-#     # "ALICE": ExpectiMaxAgent("ALICE", samples=10, depth=8),
-#     # "SUSIE": ExpectiMaxAgent("SUSIE", samples=10, depth=8),
-#     # "RUSTY": ExpectiMaxAgent("RUSTY", samples=10, depth=8),
 #     # "HARLEM": DeterminizedMCTSAgent("HARLEM", simulations=1500),
-#     # "SUSIE": MinimaxAgent("SUSIE", depth=5),
-#     # "SUSIE": DeterminizedMCTSAgent("SUSIE", simulations=1500),
-#     # "RUSTY": DeterminizedMCTSAgent("RUSTY", simulations=1500),
-#     # "ALICE": DeterminizedMCTSAgent("ALICE", simulations=1500),
-#     # "ALICE": MinimaxAgent("ALICE", depth=5),
-#     # "RUSTY": MinimaxAgent("RUSTY", depth=5),
 # }
 
 def find_first_player():
@@ -118,7 +94,7 @@ def render(state, last_trick):
     print("Playable cards:", " ".join(c.identifier for c in playable))
 
 
-# def play_game(state: GameState, render_func=None):
+
 def play_game(state: GameState, agents: dict[str, any], render_func=None):
 
     last_trick = None
@@ -184,6 +160,8 @@ def play_game(state: GameState, agents: dict[str, any], render_func=None):
 
 if __name__ == "__main__":
     env = DoppelkopfEnv("ALICE", expectimax_prob=1.0)
+    PPO_MODEL_PATH = ("ppo_phase4D.zip")
+    ppo_model = PPO.load(PPO_MODEL_PATH)
     rl_agent = RLWrapper(ppo_model, "ALICE", env)
     agents = {
         # "RUSTY": HumanAgent(),

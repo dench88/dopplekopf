@@ -8,7 +8,9 @@ import constants
 
 # Set up agents as you wish
 dummy_env = DoppelkopfEnv("ALICE", expectimax_prob=1.0)
-ppo_model = PPO.load("ppo_phase_17D.zip")
+# ppo_model = PPO.load("ppo_phase_17D.zip")
+ppo_model = PPO.load("doppelkopf_ppo_minimal.zip")
+
 agents = {
     "ALICE": RLWrapper(ppo_model, "ALICE", dummy_env),
     "RUSTY": ExpectiMaxAgent("RUSTY"),
