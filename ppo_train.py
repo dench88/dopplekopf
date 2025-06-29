@@ -113,7 +113,7 @@ def main():
         opponent_mix = {"random": 0.4, "heur": 0.6, "em": 0.0}
     else:
         # Phase 2: warm start from Phase 1, 200k, 20% random / 40% heur / 40% EM
-        load_path    = "ppo_phase_20D.zip"
+        load_path    = "models/ppo_phase_20D.zip"
         save_path    = "ppo_phase_21D"
         timesteps    = 200_000
         opponent_mix = {"random": 0.05, "heur": 0.05, "em": 0.9}

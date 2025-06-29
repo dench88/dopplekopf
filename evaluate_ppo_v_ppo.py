@@ -15,7 +15,7 @@ import constants
 NUM_EPISODES    = 10
 # model filepaths:
 MODEL_B_PATH    = "ppo_phase1.zip"
-MODEL_A_PATH    = "ppo_phase_21D.zip"
+MODEL_A_PATH    = "models/ppo_phase_21D.zip"
 # which seats does each control?
 MODEL_A_SEATS   = ["RUSTY"]
 MODEL_B_SEATS   = ["HARLEM", "ALICE", "SUSIE"]

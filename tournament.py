@@ -1,21 +1,40 @@
-import sys
+
 from main import make_initial_state, play_game, RLWrapper
 from input_utils import get_qc_split_and_points
 from agents import ExpectiMaxAgent, HeuristicRandomAgent, RandomAgent
 from ai import DoppelkopfEnv
+# from ai_old_version_fixed import DoppelkopfEnv
 from stable_baselines3 import PPO
 import constants
+import sys
+from datetime import datetime
+
+ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+logfile = f"tournament_{ts}.log"
+
+sys.stdout = open(logfile, "w", encoding="utf-8")
+sys.stderr = sys.stdout  # funnel errors into the same file
+
+print(f"Logging to {logfile!r}…")
 
 # Set up agents as you wish
-dummy_env = DoppelkopfEnv("ALICE", expectimax_prob=1.0)
+dummy_env = DoppelkopfEnv("RUSTY", expectimax_prob=1.0)
 # ppo_model = PPO.load("ppo_phase_17D.zip")
-ppo_model = PPO.load("doppelkopf_ppo_minimal.zip")
+# ppo_model = PPO.load("models/dk_ppo_VEC_61a_minimal_03R.zip")
+ppo_model = PPO.load("models/dk_ppo_VEC_61a_minimal_04R.zip")
 
 agents = {
-    "ALICE": RLWrapper(ppo_model, "ALICE", dummy_env),
-    "RUSTY": ExpectiMaxAgent("RUSTY"),
-    "HARLEM": HeuristicRandomAgent("HARLEM"),
-    "SUSIE": RandomAgent()
+    # "ALICE": RLWrapper(ppo_model, "ALICE", dummy_env),
+    "RUSTY": RLWrapper(ppo_model, "RUSTY", dummy_env),
+    # "HARLEM": RLWrapper(ppo_model, "HARLEM", dummy_env),
+    # "ALICE": RLWrapper(ppo_model, "ALICE", dummy_env),
+    # "RUSTY": ExpectiMaxAgent("RUSTY"),
+    # "HARLEM": HeuristicRandomAgent("HARLEM"),
+    "SUSIE": ExpectiMaxAgent("SUSIE"),
+    # "HARLEM": ExpectiMaxAgent("HARLEM"),
+    # "ALICE": ExpectiMaxAgent("ALICE")
+    "HARLEM": RandomAgent(),
+    "ALICE": RandomAgent()
 }
 
 NUM_GAMES = 100

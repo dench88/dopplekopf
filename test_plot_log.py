@@ -11,7 +11,7 @@ RL_SEAT         = "ALICE"
 NUM_EPISODES    = 300
 # EXPECTIMAX_PCT  = 0.8   # 80% of opponents will be ExpectiMax; 20% Random
 EXPECTIMAX_PCT  = 1.0
-MODEL_PATH      = "doppelkopf_dqn_phase4_mixed.zip"  # points to doppelkopf_dqn.zip
+MODEL_PATH      = "models/doppelkopf_dqn_phase4_mixed.zip"  # points to doppelkopf_dqn.zip
 
 # --- Load the trained model ---
 model: DQN = DQN.load(MODEL_PATH)

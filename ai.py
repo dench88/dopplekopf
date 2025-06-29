@@ -18,6 +18,9 @@ ID_TO_POWER = constants.CARD_POWER  # already a dict identifier→int
 CARD_TYPES = [(r, s) for r in TYPES for s in SUITS]
 TYPE_TO_IDX = {t: i for i, t in enumerate(CARD_TYPES)}
 
+# OBS_CONFIG = '65a'
+OBS_CONFIG = '61a'
+
 class DoppelkopfEnv(gym.Env):
     def __init__(self, player_name: str, expectimax_prob: float = 0.85, custom_opponents: bool = False):
         super().__init__()
@@ -37,20 +40,34 @@ class DoppelkopfEnv(gym.Env):
         self.action_space = spaces.Discrete(hand_size)
 
         # record where each slice begins
-        self.hand_offset  = 0
-        self.seen_offset  = hand_size #24
-        self.points_offset = hand_size + hand_size #48
-        self.trick_offset  = self.points_offset + len(constants.players) #52
-        self.team_flag_offset   = self.trick_offset + 1 #53
-        self.partner_offset     = self.team_flag_offset + 1 #54
-        self.pos_offset = self.partner_offset + 3 #57; 3 OTHER PLAYERS
-        self.winflag_offset = self.pos_offset + 1 #58
-        self.pts_curr_trick_offset = self.winflag_offset + 1 #59
-        self.strongest_offset = self.pts_curr_trick_offset + 1 #60
-        self.trump_power_offset = self.strongest_offset + 1 #61
-        self.color_offset = self.trump_power_offset + 1  # 62
-        obs_size = self.color_offset + 3 #65
-        self.observation_space = spaces.Box(0, 30, shape=(obs_size,), dtype=np.int16)
+        if OBS_CONFIG == '65a':
+            self.hand_offset  = 0
+            self.seen_offset  = hand_size #24
+            self.points_offset = hand_size + hand_size #48
+            self.trick_offset  = self.points_offset + len(constants.players) #52
+            self.team_flag_offset   = self.trick_offset + 1 #53
+            self.partner_offset     = self.team_flag_offset + 1 #54
+            self.pos_offset = self.partner_offset + 3 #57; 3 OTHER PLAYERS
+            self.winflag_offset = self.pos_offset + 1 #58
+            self.pts_curr_trick_offset = self.winflag_offset + 1 #59
+            self.strongest_offset = self.pts_curr_trick_offset + 1 #60
+            self.trump_power_offset = self.strongest_offset + 1 #61
+            self.color_offset = self.trump_power_offset + 1  # 62
+            obs_size = self.color_offset + 3 #65
+        elif OBS_CONFIG == '61a':
+            self.hand_offset = 0
+            self.seen_offset = hand_size  # 24
+            self.points_offset = hand_size + hand_size  # 48
+            self.trick_offset = self.points_offset + len(constants.players)  # 52
+            self.team_flag_offset = self.trick_offset + 1  # 53
+            self.partner_offset = self.team_flag_offset + 1  # 54
+            self.pos_offset = self.partner_offset + 3  # 57; 3 OTHER PLAYERS
+            self.winflag_offset = self.pos_offset + 1  # 58
+            self.pts_curr_trick_offset = self.winflag_offset + 1  # 59
+            self.trump_power_offset = self.pts_curr_trick_offset + 1  # 60
+            obs_size = self.trump_power_offset + 1  # 61
+
+        self.observation_space = spaces.Box(0, 120, shape=(obs_size,), dtype=np.int16)
 
         self.state = None
 
@@ -190,35 +207,36 @@ class DoppelkopfEnv(gym.Env):
 
         # 10) Strongest card left in the unseen deck
         #    Build the set of all seen identifiers
-        seen_ids = {
-                       card.identifier
-                       for trick in (*state.trick_history, state.current_trick)
-                       for _, card in trick
-                   } | {
-                       card.identifier
-                       for card in state.hands[self.player]
-                   }
-        #    The unseen identifiers are:
-        remaining_ids = FULL_ID_SET - seen_ids
-        #    Find the one with maximum power
-        if remaining_ids:
-            strongest_id = max(remaining_ids, key=lambda ident: ID_TO_POWER[ident])
-            vec[self.strongest_offset] = ID_TO_POWER[strongest_id]
-        else:
-            vec[self.strongest_offset] = 0
+        if OBS_CONFIG == '65a':
+            seen_ids = {
+                           card.identifier
+                           for trick in (*state.trick_history, state.current_trick)
+                           for _, card in trick
+                       } | {
+                           card.identifier
+                           for card in state.hands[self.player]
+                       }
+            #    The unseen identifiers are:
+            remaining_ids = FULL_ID_SET - seen_ids
+            #    Find the one with maximum power
+            if remaining_ids:
+                strongest_id = max(remaining_ids, key=lambda ident: ID_TO_POWER[ident])
+                vec[self.strongest_offset] = ID_TO_POWER[strongest_id]
+            else:
+                vec[self.strongest_offset] = 0
 
         # 11) My remaining trump power
         my_trumps = [c.power for c in state.hands[self.player] if c.category == "trumps"]
         vec[self.trump_power_offset] = sum(my_trumps)
-
-        # 12) How many “color” tricks completed per suit?
-        counts = {"hearts": 0, "spades": 0, "clubs": 0}
-        for trick in state.trick_history:
-            lead = trick[0][1].category
-            if lead in counts:
-                counts[lead] += 1
-        for i, suit in enumerate(("hearts", "spades", "clubs")):
-            vec[self.color_offset + i] = counts[suit]
+        if OBS_CONFIG == '65a':
+            # 12) How many “color” tricks completed per suit?
+            counts = {"hearts": 0, "spades": 0, "clubs": 0}
+            for trick in state.trick_history:
+                lead = trick[0][1].category
+                if lead in counts:
+                    counts[lead] += 1
+            for i, suit in enumerate(("hearts", "spades", "clubs")):
+                vec[self.color_offset + i] = counts[suit]
 
         return vec
 

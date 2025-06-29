@@ -25,6 +25,8 @@ class RLWrapper:
         self.env      = env       # store the env directly
 
     def choose(self, state: GameState):
+        # 1) make sure our dummy_env is pointing at the right seat
+        self.env.player = self.seat
         # build the obs vector from our stored env
         obs_vec = self.env._encode(state)[None]
 
