@@ -1,24 +1,18 @@
-# ppo_train_minimal.py
 import os
 from pathlib import Path
-
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import SubprocVecEnv, VecMonitor
-
 from ai import DoppelkopfEnv
 from agents import ExpectiMaxAgent
-
 
 MODELS_DIR = Path("models")
 SAVE_NAME = "dk_ppo_minimal_vec"
 TOTAL_TIMESTEPS = 100_000
 LOAD_PATH = None  # e.g. MODELS_DIR / "dk_ppo_minimal_vec_1M.zip"
 
-
 def make_env(expectimax_prob: float = 0.7, seed: int | None = None):
     """
-    Factory that creates ONE DoppelkopfEnv instance.
-
+    creates ONE DoppelkopfEnv instance.
     expectimax_prob: (if your env supports it) probability of using the
                      ExpectiMax partner vs random or something else.
     seed:            base RNG seed for this worker.

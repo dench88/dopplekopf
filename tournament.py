@@ -10,7 +10,7 @@ import sys
 from datetime import datetime
 
 ts = datetime.now().strftime("%Y%m%d_%H%M%S")
-logfile = f"tournament_{ts}.log"
+logfile = f"tournament_results/tournament_{ts}.log"
 
 sys.stdout = open(logfile, "w", encoding="utf-8")
 sys.stderr = sys.stdout  # funnel errors into the same file
@@ -19,16 +19,15 @@ print(f"Logging to {logfile!r}…")
 
 # Set up agents as you wish
 dummy_env = DoppelkopfEnv("RUSTY", expectimax_prob=1.0)
-# ppo_model = PPO.load("ppo_phase_17D.zip")
 # ppo_model = PPO.load("models/dk_ppo_VEC_61a_minimal_03R.zip")
-# ppo_model = PPO.load("models/dk_ppo_minimal_vec.zip")
+ppo_model = PPO.load("models/dk_ppo_mm_single.zip")
 
 agents = {
-    # "ALICE": RLWrapper(ppo_model, "ALICE", dummy_env),
+    "RUSTY": RLWrapper(ppo_model, "RUSTY", dummy_env),
     # "ALICE": RLWrapper(ppo_model, "ALICE", dummy_env),
     # "HARLEM": RLWrapper(ppo_model, "HARLEM", dummy_env),
     # "ALICE": RLWrapper(ppo_model, "ALICE", dummy_env),
-    "RUSTY": ExpectiMaxAgent("RUSTY"),
+    # "RUSTY": ExpectiMaxAgent("RUSTY"),
     # "HARLEM": HeuristicRandomAgent("HARLEM"),
     # "SUSIE": ExpectiMaxAgent("SUSIE"),
     # "HARLEM": ExpectiMaxAgent("HARLEM"),
@@ -43,7 +42,7 @@ NUM_GAMES = 100
 win_counts = {p: 0 for p in constants.players}
 
 # open a text file for writing in UTF-8
-with open("tournament_results.txt", "w", encoding="utf-8") as fout:
+with open("tournament_results/tournament_results.txt", "w", encoding="utf-8") as fout:
     def log(*args, **kwargs):
         # mirror to console
         print(*args, **kwargs)
