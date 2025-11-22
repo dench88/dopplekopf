@@ -162,19 +162,21 @@ def play_game(state: GameState, agents: dict[str, any], render_func=None):
 
 if __name__ == "__main__":
     env = DoppelkopfEnv("ALICE", expectimax_prob=1.0)
-    PPO_MODEL_PATH = ("ppo_phase4D.zip")
-    ppo_model = PPO.load(PPO_MODEL_PATH)
-    rl_agent = RLWrapper(ppo_model, "ALICE", env)
+    # Turn on the 3 lines below if you want to use the PPO model
+    # PPO_MODEL_PATH = ("ppo_phase4D.zip")
+    # ppo_model = PPO.load(PPO_MODEL_PATH)
+    # rl_agent = RLWrapper(ppo_model, "ALICE", env)
     agents = {
-        # "RUSTY": HumanAgent(),
+        "RUSTY": HumanAgent(),
         "SUSIE": ExpectiMaxAgent("SUSIE"),
-        "RUSTY": ExpectiMaxAgent("RUSTY"),
+        # "RUSTY": ExpectiMaxAgent("RUSTY"),
         "HARLEM": ExpectiMaxAgent("HARLEM"),
+        "ALICE": ExpectiMaxAgent("ALICE"),
         # "ALICE": HeuristicRandomAgent("ALICE"),
         # "RUSTY": rl_agent,
         # "SUSIE": rl_agent,
         # "HARLEM": rl_agent,
-        "ALICE": rl_agent
+        # "ALICE": rl_agent
     }
     state = make_initial_state()
     print("Initial hands:")
