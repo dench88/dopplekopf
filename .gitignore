@@ -8,3 +8,7 @@ tournament_results.txt
 .DS_Store
 logs/
 .idea/
+*.zip
+*.swp
+*.swo
+.vscode/
