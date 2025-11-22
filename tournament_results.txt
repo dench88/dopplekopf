@@ -1,406 +1,406 @@
 
 Game 1:
-  Q-club team      = ['RUSTY']   -> 70 points
-  non-Q-club team  = ['SUSIE', 'HARLEM', 'ALICE'] -> 170 points
+  Q-club team      = ['ALICE', 'HARLEM']   -> 164 points
+  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 76 points
 
 Game 2:
-  Q-club team      = ['ALICE', 'HARLEM']   -> 105 points
-  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 135 points
-
-Game 3:
-  Q-club team      = ['RUSTY']   -> 66 points
-  non-Q-club team  = ['SUSIE', 'HARLEM', 'ALICE'] -> 174 points
-
-Game 4:
-  Q-club team      = ['ALICE', 'HARLEM']   -> 199 points
-  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 41 points
-
-Game 5:
-  Q-club team      = ['ALICE', 'RUSTY']   -> 133 points
-  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 107 points
-
-Game 6:
-  Q-club team      = ['ALICE', 'RUSTY']   -> 111 points
-  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 129 points
-
-Game 7:
-  Q-club team      = ['ALICE', 'HARLEM']   -> 122 points
-  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 118 points
-
-Game 8:
-  Q-club team      = ['SUSIE']   -> 65 points
-  non-Q-club team  = ['RUSTY', 'HARLEM', 'ALICE'] -> 175 points
-
-Game 9:
-  Q-club team      = ['ALICE', 'SUSIE']   -> 204 points
-  non-Q-club team  = ['RUSTY', 'HARLEM'] -> 36 points
-
-Game 10:
-  Q-club team      = ['RUSTY', 'SUSIE']   -> 175 points
-  non-Q-club team  = ['HARLEM', 'ALICE'] -> 65 points
-
-Game 11:
-  Q-club team      = ['RUSTY', 'SUSIE']   -> 204 points
-  non-Q-club team  = ['HARLEM', 'ALICE'] -> 36 points
-
-Game 12:
-  Q-club team      = ['ALICE']   -> 67 points
-  non-Q-club team  = ['RUSTY', 'SUSIE', 'HARLEM'] -> 173 points
-
-Game 13:
-  Q-club team      = ['HARLEM', 'SUSIE']   -> 134 points
-  non-Q-club team  = ['RUSTY', 'ALICE'] -> 106 points
-
-Game 14:
-  Q-club team      = ['ALICE']   -> 126 points
-  non-Q-club team  = ['RUSTY', 'SUSIE', 'HARLEM'] -> 114 points
-
-Game 15:
-  Q-club team      = ['ALICE']   -> 149 points
-  non-Q-club team  = ['RUSTY', 'SUSIE', 'HARLEM'] -> 91 points
-
-Game 16:
-  Q-club team      = ['ALICE']   -> 125 points
-  non-Q-club team  = ['RUSTY', 'SUSIE', 'HARLEM'] -> 115 points
-
-Game 17:
-  Q-club team      = ['ALICE', 'HARLEM']   -> 160 points
-  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 80 points
-
-Game 18:
-  Q-club team      = ['HARLEM']   -> 123 points
-  non-Q-club team  = ['RUSTY', 'SUSIE', 'ALICE'] -> 117 points
-
-Game 19:
-  Q-club team      = ['RUSTY', 'SUSIE']   -> 169 points
-  non-Q-club team  = ['HARLEM', 'ALICE'] -> 71 points
-
-Game 20:
-  Q-club team      = ['ALICE', 'HARLEM']   -> 104 points
-  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 136 points
-
-Game 21:
-  Q-club team      = ['RUSTY', 'SUSIE']   -> 154 points
-  non-Q-club team  = ['HARLEM', 'ALICE'] -> 86 points
-
-Game 22:
-  Q-club team      = ['HARLEM', 'SUSIE']   -> 114 points
-  non-Q-club team  = ['RUSTY', 'ALICE'] -> 126 points
-
-Game 23:
-  Q-club team      = ['SUSIE']   -> 177 points
-  non-Q-club team  = ['RUSTY', 'HARLEM', 'ALICE'] -> 63 points
-
-Game 24:
-  Q-club team      = ['HARLEM', 'SUSIE']   -> 154 points
-  non-Q-club team  = ['RUSTY', 'ALICE'] -> 86 points
-
-Game 25:
-  Q-club team      = ['HARLEM']   -> 28 points
-  non-Q-club team  = ['RUSTY', 'SUSIE', 'ALICE'] -> 212 points
-
-Game 26:
-  Q-club team      = ['ALICE', 'HARLEM']   -> 112 points
-  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 128 points
-
-Game 27:
-  Q-club team      = ['RUSTY', 'SUSIE']   -> 192 points
-  non-Q-club team  = ['HARLEM', 'ALICE'] -> 48 points
-
-Game 28:
-  Q-club team      = ['RUSTY']   -> 101 points
-  non-Q-club team  = ['SUSIE', 'HARLEM', 'ALICE'] -> 139 points
-
-Game 29:
-  Q-club team      = ['HARLEM', 'RUSTY']   -> 134 points
-  non-Q-club team  = ['SUSIE', 'ALICE'] -> 106 points
-
-Game 30:
-  Q-club team      = ['RUSTY', 'SUSIE']   -> 149 points
-  non-Q-club team  = ['HARLEM', 'ALICE'] -> 91 points
-
-Game 31:
-  Q-club team      = ['ALICE', 'SUSIE']   -> 144 points
-  non-Q-club team  = ['RUSTY', 'HARLEM'] -> 96 points
-
-Game 32:
-  Q-club team      = ['RUSTY', 'SUSIE']   -> 146 points
-  non-Q-club team  = ['HARLEM', 'ALICE'] -> 94 points
-
-Game 33:
-  Q-club team      = ['HARLEM', 'SUSIE']   -> 208 points
-  non-Q-club team  = ['RUSTY', 'ALICE'] -> 32 points
-
-Game 34:
-  Q-club team      = ['HARLEM', 'SUSIE']   -> 175 points
-  non-Q-club team  = ['RUSTY', 'ALICE'] -> 65 points
-
-Game 35:
-  Q-club team      = ['ALICE', 'RUSTY']   -> 148 points
-  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 92 points
-
-Game 36:
-  Q-club team      = ['RUSTY']   -> 28 points
-  non-Q-club team  = ['SUSIE', 'HARLEM', 'ALICE'] -> 212 points
-
-Game 37:
-  Q-club team      = ['HARLEM', 'RUSTY']   -> 100 points
-  non-Q-club team  = ['SUSIE', 'ALICE'] -> 140 points
-
-Game 38:
-  Q-club team      = ['ALICE', 'HARLEM']   -> 69 points
-  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 171 points
-
-Game 39:
-  Q-club team      = ['RUSTY', 'SUSIE']   -> 190 points
-  non-Q-club team  = ['HARLEM', 'ALICE'] -> 50 points
-
-Game 40:
-  Q-club team      = ['ALICE', 'RUSTY']   -> 101 points
-  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 139 points
-
-Game 41:
-  Q-club team      = ['RUSTY']   -> 36 points
-  non-Q-club team  = ['SUSIE', 'HARLEM', 'ALICE'] -> 204 points
-
-Game 42:
-  Q-club team      = ['HARLEM', 'RUSTY']   -> 77 points
-  non-Q-club team  = ['SUSIE', 'ALICE'] -> 163 points
-
-Game 43:
-  Q-club team      = ['SUSIE']   -> 134 points
-  non-Q-club team  = ['RUSTY', 'HARLEM', 'ALICE'] -> 106 points
-
-Game 44:
-  Q-club team      = ['HARLEM', 'RUSTY']   -> 186 points
-  non-Q-club team  = ['SUSIE', 'ALICE'] -> 54 points
-
-Game 45:
-  Q-club team      = ['ALICE', 'RUSTY']   -> 171 points
-  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 69 points
-
-Game 46:
-  Q-club team      = ['HARLEM', 'SUSIE']   -> 196 points
-  non-Q-club team  = ['RUSTY', 'ALICE'] -> 44 points
-
-Game 47:
-  Q-club team      = ['ALICE', 'RUSTY']   -> 139 points
-  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 101 points
-
-Game 48:
-  Q-club team      = ['ALICE', 'HARLEM']   -> 151 points
-  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 89 points
-
-Game 49:
-  Q-club team      = ['ALICE', 'HARLEM']   -> 89 points
-  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 151 points
-
-Game 50:
-  Q-club team      = ['HARLEM', 'RUSTY']   -> 124 points
-  non-Q-club team  = ['SUSIE', 'ALICE'] -> 116 points
-
-Game 51:
-  Q-club team      = ['HARLEM', 'RUSTY']   -> 65 points
-  non-Q-club team  = ['SUSIE', 'ALICE'] -> 175 points
-
-Game 52:
-  Q-club team      = ['RUSTY', 'SUSIE']   -> 195 points
-  non-Q-club team  = ['HARLEM', 'ALICE'] -> 45 points
-
-Game 53:
-  Q-club team      = ['HARLEM', 'SUSIE']   -> 96 points
-  non-Q-club team  = ['RUSTY', 'ALICE'] -> 144 points
-
-Game 54:
-  Q-club team      = ['ALICE', 'HARLEM']   -> 122 points
-  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 118 points
-
-Game 55:
-  Q-club team      = ['ALICE']   -> 92 points
-  non-Q-club team  = ['RUSTY', 'SUSIE', 'HARLEM'] -> 148 points
-
-Game 56:
-  Q-club team      = ['ALICE', 'RUSTY']   -> 133 points
-  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 107 points
-
-Game 57:
-  Q-club team      = ['RUSTY']   -> 99 points
-  non-Q-club team  = ['SUSIE', 'HARLEM', 'ALICE'] -> 141 points
-
-Game 58:
-  Q-club team      = ['RUSTY']   -> 39 points
-  non-Q-club team  = ['SUSIE', 'HARLEM', 'ALICE'] -> 201 points
-
-Game 59:
-  Q-club team      = ['ALICE', 'HARLEM']   -> 167 points
-  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 73 points
-
-Game 60:
-  Q-club team      = ['HARLEM', 'SUSIE']   -> 128 points
-  non-Q-club team  = ['RUSTY', 'ALICE'] -> 112 points
-
-Game 61:
-  Q-club team      = ['ALICE', 'SUSIE']   -> 126 points
-  non-Q-club team  = ['RUSTY', 'HARLEM'] -> 114 points
-
-Game 62:
-  Q-club team      = ['HARLEM', 'RUSTY']   -> 106 points
-  non-Q-club team  = ['SUSIE', 'ALICE'] -> 134 points
-
-Game 63:
-  Q-club team      = ['RUSTY', 'SUSIE']   -> 157 points
-  non-Q-club team  = ['HARLEM', 'ALICE'] -> 83 points
-
-Game 64:
-  Q-club team      = ['SUSIE']   -> 70 points
-  non-Q-club team  = ['RUSTY', 'HARLEM', 'ALICE'] -> 170 points
-
-Game 65:
-  Q-club team      = ['HARLEM', 'SUSIE']   -> 178 points
-  non-Q-club team  = ['RUSTY', 'ALICE'] -> 62 points
-
-Game 66:
-  Q-club team      = ['RUSTY']   -> 19 points
-  non-Q-club team  = ['SUSIE', 'HARLEM', 'ALICE'] -> 221 points
-
-Game 67:
-  Q-club team      = ['RUSTY', 'SUSIE']   -> 137 points
-  non-Q-club team  = ['HARLEM', 'ALICE'] -> 103 points
-
-Game 68:
-  Q-club team      = ['ALICE', 'HARLEM']   -> 83 points
-  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 157 points
-
-Game 69:
-  Q-club team      = ['ALICE', 'RUSTY']   -> 166 points
-  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 74 points
-
-Game 70:
-  Q-club team      = ['ALICE', 'HARLEM']   -> 46 points
-  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 194 points
-
-Game 71:
-  Q-club team      = ['RUSTY']   -> 164 points
-  non-Q-club team  = ['SUSIE', 'HARLEM', 'ALICE'] -> 76 points
-
-Game 72:
-  Q-club team      = ['HARLEM', 'SUSIE']   -> 117 points
-  non-Q-club team  = ['RUSTY', 'ALICE'] -> 123 points
-
-Game 73:
-  Q-club team      = ['ALICE', 'SUSIE']   -> 92 points
-  non-Q-club team  = ['RUSTY', 'HARLEM'] -> 148 points
-
-Game 74:
-  Q-club team      = ['RUSTY', 'SUSIE']   -> 109 points
-  non-Q-club team  = ['HARLEM', 'ALICE'] -> 131 points
-
-Game 75:
-  Q-club team      = ['HARLEM', 'RUSTY']   -> 141 points
-  non-Q-club team  = ['SUSIE', 'ALICE'] -> 99 points
-
-Game 76:
-  Q-club team      = ['ALICE', 'SUSIE']   -> 145 points
-  non-Q-club team  = ['RUSTY', 'HARLEM'] -> 95 points
-
-Game 77:
-  Q-club team      = ['RUSTY', 'SUSIE']   -> 139 points
-  non-Q-club team  = ['HARLEM', 'ALICE'] -> 101 points
-
-Game 78:
-  Q-club team      = ['ALICE']   -> 52 points
-  non-Q-club team  = ['RUSTY', 'SUSIE', 'HARLEM'] -> 188 points
-
-Game 79:
-  Q-club team      = ['ALICE', 'SUSIE']   -> 227 points
-  non-Q-club team  = ['RUSTY', 'HARLEM'] -> 13 points
-
-Game 80:
-  Q-club team      = ['HARLEM', 'SUSIE']   -> 152 points
-  non-Q-club team  = ['RUSTY', 'ALICE'] -> 88 points
-
-Game 81:
-  Q-club team      = ['RUSTY']   -> 53 points
-  non-Q-club team  = ['SUSIE', 'HARLEM', 'ALICE'] -> 187 points
-
-Game 82:
-  Q-club team      = ['ALICE', 'HARLEM']   -> 88 points
-  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 152 points
-
-Game 83:
-  Q-club team      = ['ALICE', 'RUSTY']   -> 151 points
-  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 89 points
-
-Game 84:
-  Q-club team      = ['RUSTY']   -> 81 points
-  non-Q-club team  = ['SUSIE', 'HARLEM', 'ALICE'] -> 159 points
-
-Game 85:
-  Q-club team      = ['HARLEM', 'RUSTY']   -> 45 points
-  non-Q-club team  = ['SUSIE', 'ALICE'] -> 195 points
-
-Game 86:
-  Q-club team      = ['HARLEM', 'SUSIE']   -> 190 points
-  non-Q-club team  = ['RUSTY', 'ALICE'] -> 50 points
-
-Game 87:
-  Q-club team      = ['HARLEM', 'SUSIE']   -> 135 points
-  non-Q-club team  = ['RUSTY', 'ALICE'] -> 105 points
-
-Game 88:
-  Q-club team      = ['ALICE', 'HARLEM']   -> 90 points
-  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 150 points
-
-Game 89:
-  Q-club team      = ['ALICE', 'RUSTY']   -> 110 points
-  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 130 points
-
-Game 90:
   Q-club team      = ['HARLEM', 'RUSTY']   -> 87 points
   non-Q-club team  = ['SUSIE', 'ALICE'] -> 153 points
 
+Game 3:
+  Q-club team      = ['ALICE', 'HARLEM']   -> 176 points
+  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 64 points
+
+Game 4:
+  Q-club team      = ['ALICE', 'RUSTY']   -> 167 points
+  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 73 points
+
+Game 5:
+  Q-club team      = ['ALICE', 'HARLEM']   -> 120 points
+  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 120 points
+
+Game 6:
+  Q-club team      = ['ALICE']   -> 138 points
+  non-Q-club team  = ['RUSTY', 'SUSIE', 'HARLEM'] -> 102 points
+
+Game 7:
+  Q-club team      = ['HARLEM', 'SUSIE']   -> 43 points
+  non-Q-club team  = ['RUSTY', 'ALICE'] -> 197 points
+
+Game 8:
+  Q-club team      = ['ALICE']   -> 78 points
+  non-Q-club team  = ['RUSTY', 'SUSIE', 'HARLEM'] -> 162 points
+
+Game 9:
+  Q-club team      = ['ALICE', 'RUSTY']   -> 73 points
+  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 167 points
+
+Game 10:
+  Q-club team      = ['ALICE', 'SUSIE']   -> 184 points
+  non-Q-club team  = ['RUSTY', 'HARLEM'] -> 56 points
+
+Game 11:
+  Q-club team      = ['ALICE', 'RUSTY']   -> 162 points
+  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 78 points
+
+Game 12:
+  Q-club team      = ['ALICE']   -> 38 points
+  non-Q-club team  = ['RUSTY', 'SUSIE', 'HARLEM'] -> 202 points
+
+Game 13:
+  Q-club team      = ['HARLEM', 'SUSIE']   -> 74 points
+  non-Q-club team  = ['RUSTY', 'ALICE'] -> 166 points
+
+Game 14:
+  Q-club team      = ['ALICE', 'RUSTY']   -> 124 points
+  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 116 points
+
+Game 15:
+  Q-club team      = ['ALICE', 'HARLEM']   -> 114 points
+  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 126 points
+
+Game 16:
+  Q-club team      = ['ALICE', 'SUSIE']   -> 126 points
+  non-Q-club team  = ['RUSTY', 'HARLEM'] -> 114 points
+
+Game 17:
+  Q-club team      = ['HARLEM']   -> 45 points
+  non-Q-club team  = ['RUSTY', 'SUSIE', 'ALICE'] -> 195 points
+
+Game 18:
+  Q-club team      = ['ALICE']   -> 59 points
+  non-Q-club team  = ['RUSTY', 'SUSIE', 'HARLEM'] -> 181 points
+
+Game 19:
+  Q-club team      = ['RUSTY', 'SUSIE']   -> 112 points
+  non-Q-club team  = ['HARLEM', 'ALICE'] -> 128 points
+
+Game 20:
+  Q-club team      = ['RUSTY', 'SUSIE']   -> 135 points
+  non-Q-club team  = ['HARLEM', 'ALICE'] -> 105 points
+
+Game 21:
+  Q-club team      = ['ALICE']   -> 117 points
+  non-Q-club team  = ['RUSTY', 'SUSIE', 'HARLEM'] -> 123 points
+
+Game 22:
+  Q-club team      = ['RUSTY']   -> 73 points
+  non-Q-club team  = ['SUSIE', 'HARLEM', 'ALICE'] -> 167 points
+
+Game 23:
+  Q-club team      = ['HARLEM']   -> 81 points
+  non-Q-club team  = ['RUSTY', 'SUSIE', 'ALICE'] -> 159 points
+
+Game 24:
+  Q-club team      = ['HARLEM', 'RUSTY']   -> 146 points
+  non-Q-club team  = ['SUSIE', 'ALICE'] -> 94 points
+
+Game 25:
+  Q-club team      = ['ALICE', 'SUSIE']   -> 193 points
+  non-Q-club team  = ['RUSTY', 'HARLEM'] -> 47 points
+
+Game 26:
+  Q-club team      = ['ALICE', 'RUSTY']   -> 174 points
+  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 66 points
+
+Game 27:
+  Q-club team      = ['ALICE', 'RUSTY']   -> 178 points
+  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 62 points
+
+Game 28:
+  Q-club team      = ['RUSTY', 'SUSIE']   -> 164 points
+  non-Q-club team  = ['HARLEM', 'ALICE'] -> 76 points
+
+Game 29:
+  Q-club team      = ['RUSTY']   -> 100 points
+  non-Q-club team  = ['SUSIE', 'HARLEM', 'ALICE'] -> 140 points
+
+Game 30:
+  Q-club team      = ['ALICE', 'HARLEM']   -> 109 points
+  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 131 points
+
+Game 31:
+  Q-club team      = ['HARLEM', 'RUSTY']   -> 118 points
+  non-Q-club team  = ['SUSIE', 'ALICE'] -> 122 points
+
+Game 32:
+  Q-club team      = ['ALICE', 'RUSTY']   -> 145 points
+  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 95 points
+
+Game 33:
+  Q-club team      = ['ALICE', 'RUSTY']   -> 200 points
+  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 40 points
+
+Game 34:
+  Q-club team      = ['ALICE', 'SUSIE']   -> 165 points
+  non-Q-club team  = ['RUSTY', 'HARLEM'] -> 75 points
+
+Game 35:
+  Q-club team      = ['HARLEM', 'SUSIE']   -> 107 points
+  non-Q-club team  = ['RUSTY', 'ALICE'] -> 133 points
+
+Game 36:
+  Q-club team      = ['ALICE']   -> 64 points
+  non-Q-club team  = ['RUSTY', 'SUSIE', 'HARLEM'] -> 176 points
+
+Game 37:
+  Q-club team      = ['HARLEM', 'SUSIE']   -> 139 points
+  non-Q-club team  = ['RUSTY', 'ALICE'] -> 101 points
+
+Game 38:
+  Q-club team      = ['HARLEM', 'RUSTY']   -> 98 points
+  non-Q-club team  = ['SUSIE', 'ALICE'] -> 142 points
+
+Game 39:
+  Q-club team      = ['HARLEM', 'RUSTY']   -> 84 points
+  non-Q-club team  = ['SUSIE', 'ALICE'] -> 156 points
+
+Game 40:
+  Q-club team      = ['HARLEM', 'RUSTY']   -> 136 points
+  non-Q-club team  = ['SUSIE', 'ALICE'] -> 104 points
+
+Game 41:
+  Q-club team      = ['RUSTY', 'SUSIE']   -> 80 points
+  non-Q-club team  = ['HARLEM', 'ALICE'] -> 160 points
+
+Game 42:
+  Q-club team      = ['RUSTY']   -> 107 points
+  non-Q-club team  = ['SUSIE', 'HARLEM', 'ALICE'] -> 133 points
+
+Game 43:
+  Q-club team      = ['ALICE', 'RUSTY']   -> 189 points
+  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 51 points
+
+Game 44:
+  Q-club team      = ['SUSIE']   -> 178 points
+  non-Q-club team  = ['RUSTY', 'HARLEM', 'ALICE'] -> 62 points
+
+Game 45:
+  Q-club team      = ['RUSTY', 'SUSIE']   -> 140 points
+  non-Q-club team  = ['HARLEM', 'ALICE'] -> 100 points
+
+Game 46:
+  Q-club team      = ['ALICE', 'HARLEM']   -> 115 points
+  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 125 points
+
+Game 47:
+  Q-club team      = ['ALICE', 'RUSTY']   -> 148 points
+  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 92 points
+
+Game 48:
+  Q-club team      = ['RUSTY', 'SUSIE']   -> 124 points
+  non-Q-club team  = ['HARLEM', 'ALICE'] -> 116 points
+
+Game 49:
+  Q-club team      = ['HARLEM']   -> 51 points
+  non-Q-club team  = ['RUSTY', 'SUSIE', 'ALICE'] -> 189 points
+
+Game 50:
+  Q-club team      = ['HARLEM']   -> 47 points
+  non-Q-club team  = ['RUSTY', 'SUSIE', 'ALICE'] -> 193 points
+
+Game 51:
+  Q-club team      = ['ALICE', 'RUSTY']   -> 210 points
+  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 30 points
+
+Game 52:
+  Q-club team      = ['RUSTY', 'SUSIE']   -> 192 points
+  non-Q-club team  = ['HARLEM', 'ALICE'] -> 48 points
+
+Game 53:
+  Q-club team      = ['HARLEM']   -> 13 points
+  non-Q-club team  = ['RUSTY', 'SUSIE', 'ALICE'] -> 227 points
+
+Game 54:
+  Q-club team      = ['HARLEM', 'RUSTY']   -> 69 points
+  non-Q-club team  = ['SUSIE', 'ALICE'] -> 171 points
+
+Game 55:
+  Q-club team      = ['RUSTY', 'SUSIE']   -> 68 points
+  non-Q-club team  = ['HARLEM', 'ALICE'] -> 172 points
+
+Game 56:
+  Q-club team      = ['HARLEM', 'RUSTY']   -> 131 points
+  non-Q-club team  = ['SUSIE', 'ALICE'] -> 109 points
+
+Game 57:
+  Q-club team      = ['ALICE', 'HARLEM']   -> 92 points
+  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 148 points
+
+Game 58:
+  Q-club team      = ['ALICE', 'HARLEM']   -> 127 points
+  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 113 points
+
+Game 59:
+  Q-club team      = ['ALICE', 'RUSTY']   -> 77 points
+  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 163 points
+
+Game 60:
+  Q-club team      = ['HARLEM', 'RUSTY']   -> 100 points
+  non-Q-club team  = ['SUSIE', 'ALICE'] -> 140 points
+
+Game 61:
+  Q-club team      = ['ALICE', 'RUSTY']   -> 110 points
+  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 130 points
+
+Game 62:
+  Q-club team      = ['HARLEM', 'RUSTY']   -> 142 points
+  non-Q-club team  = ['SUSIE', 'ALICE'] -> 98 points
+
+Game 63:
+  Q-club team      = ['RUSTY', 'SUSIE']   -> 136 points
+  non-Q-club team  = ['HARLEM', 'ALICE'] -> 104 points
+
+Game 64:
+  Q-club team      = ['ALICE']   -> 109 points
+  non-Q-club team  = ['RUSTY', 'SUSIE', 'HARLEM'] -> 131 points
+
+Game 65:
+  Q-club team      = ['ALICE', 'SUSIE']   -> 137 points
+  non-Q-club team  = ['RUSTY', 'HARLEM'] -> 103 points
+
+Game 66:
+  Q-club team      = ['ALICE', 'RUSTY']   -> 80 points
+  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 160 points
+
+Game 67:
+  Q-club team      = ['ALICE', 'RUSTY']   -> 101 points
+  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 139 points
+
+Game 68:
+  Q-club team      = ['ALICE']   -> 82 points
+  non-Q-club team  = ['RUSTY', 'SUSIE', 'HARLEM'] -> 158 points
+
+Game 69:
+  Q-club team      = ['HARLEM', 'RUSTY']   -> 107 points
+  non-Q-club team  = ['SUSIE', 'ALICE'] -> 133 points
+
+Game 70:
+  Q-club team      = ['RUSTY', 'SUSIE']   -> 151 points
+  non-Q-club team  = ['HARLEM', 'ALICE'] -> 89 points
+
+Game 71:
+  Q-club team      = ['HARLEM']   -> 71 points
+  non-Q-club team  = ['RUSTY', 'SUSIE', 'ALICE'] -> 169 points
+
+Game 72:
+  Q-club team      = ['HARLEM', 'RUSTY']   -> 88 points
+  non-Q-club team  = ['SUSIE', 'ALICE'] -> 152 points
+
+Game 73:
+  Q-club team      = ['ALICE', 'SUSIE']   -> 181 points
+  non-Q-club team  = ['RUSTY', 'HARLEM'] -> 59 points
+
+Game 74:
+  Q-club team      = ['SUSIE']   -> 86 points
+  non-Q-club team  = ['RUSTY', 'HARLEM', 'ALICE'] -> 154 points
+
+Game 75:
+  Q-club team      = ['ALICE', 'SUSIE']   -> 125 points
+  non-Q-club team  = ['RUSTY', 'HARLEM'] -> 115 points
+
+Game 76:
+  Q-club team      = ['ALICE', 'SUSIE']   -> 151 points
+  non-Q-club team  = ['RUSTY', 'HARLEM'] -> 89 points
+
+Game 77:
+  Q-club team      = ['ALICE', 'RUSTY']   -> 20 points
+  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 220 points
+
+Game 78:
+  Q-club team      = ['HARLEM', 'RUSTY']   -> 101 points
+  non-Q-club team  = ['SUSIE', 'ALICE'] -> 139 points
+
+Game 79:
+  Q-club team      = ['RUSTY', 'SUSIE']   -> 169 points
+  non-Q-club team  = ['HARLEM', 'ALICE'] -> 71 points
+
+Game 80:
+  Q-club team      = ['RUSTY']   -> 84 points
+  non-Q-club team  = ['SUSIE', 'HARLEM', 'ALICE'] -> 156 points
+
+Game 81:
+  Q-club team      = ['ALICE', 'HARLEM']   -> 157 points
+  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 83 points
+
+Game 82:
+  Q-club team      = ['ALICE', 'RUSTY']   -> 139 points
+  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 101 points
+
+Game 83:
+  Q-club team      = ['HARLEM', 'RUSTY']   -> 196 points
+  non-Q-club team  = ['SUSIE', 'ALICE'] -> 44 points
+
+Game 84:
+  Q-club team      = ['HARLEM', 'RUSTY']   -> 106 points
+  non-Q-club team  = ['SUSIE', 'ALICE'] -> 134 points
+
+Game 85:
+  Q-club team      = ['HARLEM', 'SUSIE']   -> 140 points
+  non-Q-club team  = ['RUSTY', 'ALICE'] -> 100 points
+
+Game 86:
+  Q-club team      = ['SUSIE']   -> 29 points
+  non-Q-club team  = ['RUSTY', 'HARLEM', 'ALICE'] -> 211 points
+
+Game 87:
+  Q-club team      = ['ALICE', 'SUSIE']   -> 144 points
+  non-Q-club team  = ['RUSTY', 'HARLEM'] -> 96 points
+
+Game 88:
+  Q-club team      = ['HARLEM', 'RUSTY']   -> 204 points
+  non-Q-club team  = ['SUSIE', 'ALICE'] -> 36 points
+
+Game 89:
+  Q-club team      = ['HARLEM', 'RUSTY']   -> 178 points
+  non-Q-club team  = ['SUSIE', 'ALICE'] -> 62 points
+
+Game 90:
+  Q-club team      = ['RUSTY', 'SUSIE']   -> 185 points
+  non-Q-club team  = ['HARLEM', 'ALICE'] -> 55 points
+
 Game 91:
-  Q-club team      = ['ALICE', 'SUSIE']   -> 174 points
-  non-Q-club team  = ['RUSTY', 'HARLEM'] -> 66 points
+  Q-club team      = ['HARLEM']   -> 106 points
+  non-Q-club team  = ['RUSTY', 'SUSIE', 'ALICE'] -> 134 points
 
 Game 92:
-  Q-club team      = ['SUSIE']   -> 151 points
-  non-Q-club team  = ['RUSTY', 'HARLEM', 'ALICE'] -> 89 points
+  Q-club team      = ['ALICE', 'SUSIE']   -> 158 points
+  non-Q-club team  = ['RUSTY', 'HARLEM'] -> 82 points
 
 Game 93:
-  Q-club team      = ['ALICE', 'RUSTY']   -> 224 points
-  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 16 points
+  Q-club team      = ['HARLEM', 'SUSIE']   -> 146 points
+  non-Q-club team  = ['RUSTY', 'ALICE'] -> 94 points
 
 Game 94:
-  Q-club team      = ['ALICE']   -> 19 points
-  non-Q-club team  = ['RUSTY', 'SUSIE', 'HARLEM'] -> 221 points
+  Q-club team      = ['RUSTY', 'SUSIE']   -> 117 points
+  non-Q-club team  = ['HARLEM', 'ALICE'] -> 123 points
 
 Game 95:
-  Q-club team      = ['ALICE', 'SUSIE']   -> 198 points
-  non-Q-club team  = ['RUSTY', 'HARLEM'] -> 42 points
+  Q-club team      = ['ALICE', 'RUSTY']   -> 94 points
+  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 146 points
 
 Game 96:
-  Q-club team      = ['RUSTY', 'SUSIE']   -> 141 points
-  non-Q-club team  = ['HARLEM', 'ALICE'] -> 99 points
+  Q-club team      = ['HARLEM', 'SUSIE']   -> 212 points
+  non-Q-club team  = ['RUSTY', 'ALICE'] -> 28 points
 
 Game 97:
-  Q-club team      = ['ALICE', 'RUSTY']   -> 70 points
-  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 170 points
+  Q-club team      = ['ALICE', 'RUSTY']   -> 25 points
+  non-Q-club team  = ['SUSIE', 'HARLEM'] -> 215 points
 
 Game 98:
-  Q-club team      = ['SUSIE']   -> 80 points
-  non-Q-club team  = ['RUSTY', 'HARLEM', 'ALICE'] -> 160 points
+  Q-club team      = ['HARLEM', 'RUSTY']   -> 190 points
+  non-Q-club team  = ['SUSIE', 'ALICE'] -> 50 points
 
 Game 99:
-  Q-club team      = ['HARLEM', 'RUSTY']   -> 95 points
-  non-Q-club team  = ['SUSIE', 'ALICE'] -> 145 points
+  Q-club team      = ['RUSTY', 'SUSIE']   -> 147 points
+  non-Q-club team  = ['HARLEM', 'ALICE'] -> 93 points
 
 Game 100:
-  Q-club team      = ['ALICE', 'HARLEM']   -> 180 points
-  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 60 points
+  Q-club team      = ['ALICE', 'HARLEM']   -> 113 points
+  non-Q-club team  = ['RUSTY', 'SUSIE'] -> 127 points
 
 === Tournament results ===
-  RUSTY: 47 wins (47.0%)
-  SUSIE: 68 wins (68.0%)
-  HARLEM: 45 wins (45.0%)
-  ALICE: 50 wins (50.0%)
+  RUSTY: 54 wins (54.0%)
+  SUSIE: 67 wins (67.0%)
+  HARLEM: 41 wins (41.0%)
+  ALICE: 56 wins (56.0%)

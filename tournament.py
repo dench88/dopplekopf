@@ -21,20 +21,21 @@ print(f"Logging to {logfile!r}…")
 dummy_env = DoppelkopfEnv("RUSTY", expectimax_prob=1.0)
 # ppo_model = PPO.load("ppo_phase_17D.zip")
 # ppo_model = PPO.load("models/dk_ppo_VEC_61a_minimal_03R.zip")
-ppo_model = PPO.load("models/dk_ppo_VEC_61a_minimal_04R.zip")
+ppo_model = PPO.load("models/dk_ppo_minimal_vec.zip")
 
 agents = {
     # "ALICE": RLWrapper(ppo_model, "ALICE", dummy_env),
-    "RUSTY": RLWrapper(ppo_model, "RUSTY", dummy_env),
+    "ALICE": RLWrapper(ppo_model, "ALICE", dummy_env),
     # "HARLEM": RLWrapper(ppo_model, "HARLEM", dummy_env),
     # "ALICE": RLWrapper(ppo_model, "ALICE", dummy_env),
     # "RUSTY": ExpectiMaxAgent("RUSTY"),
     # "HARLEM": HeuristicRandomAgent("HARLEM"),
-    "SUSIE": ExpectiMaxAgent("SUSIE"),
+    # "SUSIE": ExpectiMaxAgent("SUSIE"),
     # "HARLEM": ExpectiMaxAgent("HARLEM"),
     # "ALICE": ExpectiMaxAgent("ALICE")
     "HARLEM": RandomAgent(),
-    "ALICE": RandomAgent()
+    "SUSIE": RandomAgent(),
+    "RUSTY": RandomAgent()
 }
 
 NUM_GAMES = 100
