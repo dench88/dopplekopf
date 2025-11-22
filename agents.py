@@ -38,7 +38,7 @@ def fast_opening_play(agent_name: str,
                       current_trick: tuple) -> Optional[Card]:
     """
     If we are literally at the very first play of the very first trick, 
-    apply your fast heuristics.  Otherwise return None.
+    apply fast heuristics.  Otherwise return None.
     """
     # only at absolute game start
     if trick_history or current_trick:
@@ -67,6 +67,7 @@ def fast_opening_play(agent_name: str,
         return a_hearts[0]
 
     # — Priority 3: if I hold 3–5 J/Q, play the 3rd strongest ——
+    # QUESTION: what about 10h?
     jq = [c for c in hand if c.type in ("J", "Q")]
     if 3 <= len(jq) <= 5:
         jq_sorted = sorted(jq, key=lambda c: c.power, reverse=True)
