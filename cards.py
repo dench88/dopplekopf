@@ -11,7 +11,7 @@ class Card:
             self.power = constants.CARD_POWER[self.identifier]
         except KeyError:
             raise ValueError(f"Unknown card id {self.identifier!r}")
-        self.category = constants.trick_category[self.identifier]
+        self.category = constants.TRICK_CATEGORY[self.identifier]
 
 
 def create_deck():

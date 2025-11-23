@@ -1,7 +1,7 @@
 import random
 import time
 from typing import List, Optional
-from form_deck import Card
+from cards import Card
 from game_state import GameState
 
 

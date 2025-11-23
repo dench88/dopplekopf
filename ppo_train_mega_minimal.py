@@ -3,8 +3,9 @@ from stable_baselines3 import PPO
 from ai import DoppelkopfEnv
 from agents import ExpectiMaxAgent
 
-TOTAL_TIMESTEPS = 10_000
-SAVE_PATH = Path("models") / "dk_ppo_mm_single.zip"
+TOTAL_TIMESTEPS = 100
+# SAVE_PATH = Path("models") / "dk_ppo_mm_single.zip"
+SAVE_PATH = Path("models") / "experimental_delete.zip"
 
 def make_env():
     env = DoppelkopfEnv("ALICE", expectimax_prob=0.7)

@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Dict, Tuple, List
 import constants
-from form_deck import Card, create_deck
+from cards import Card, create_deck
 
 @dataclass(frozen=True)
 class GameState:
@@ -12,7 +12,9 @@ class GameState:
     # Current trick in progress: tuple of (player, Card)
     current_trick: Tuple[Tuple[str, Card], ...] = field(default_factory=tuple)
     # Accumulated points per player
-    points: Dict[str, int] = field(default_factory=lambda: dict(constants.player_points))
+    points: Dict[str, int] = field(
+        default_factory=lambda: dict(constants.PLAYER_POINTS_DEFAULT)
+        )
     # Who plays next
     next_player: str = ""
 
@@ -38,23 +40,17 @@ class GameState:
     
     @classmethod
     def random_deal(cls):
-        # 1) build & shuffle the deck
         deck = create_deck()  # returns 48 shuffled Card objects
-
-        # 2) split into equal hands (12 cards each if 4 players)
-        players  = list(constants.players)              # e.g. ["ALICE","BOB","CAROL","DAVE"]
+        players  = constants.PLAYERS             
         hand_size = len(deck) // len(players)
 
-        # simple slice-based deal
         hands = {
             p: tuple(deck[i*hand_size : (i+1)*hand_size])
             for i, p in enumerate(players)
         }
 
-        # 3) initialize scores to zero
         points = {p: 0 for p in players}
 
-        # 4) choose the first leader (you can randomize or cycle)
         next_player = players[0]
 
         # 5) return a fresh GameState
@@ -69,7 +65,7 @@ class GameState:
     
     def apply_action(self, card: Card) -> "GameState":
         # 1) Mutable copies of everything
-        players = list(constants.players)
+        players = constants.PLAYERS
         hands   = {p: list(h)             for p, h in self.hands.items()}
         history = [list(tr)              for tr     in self.trick_history]
         trick   = [*self.current_trick, (self.next_player, card)]

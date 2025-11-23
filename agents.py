@@ -2,14 +2,12 @@ import random
 import math
 from typing import List, Optional
 from game_state import GameState
-from form_deck import Card
+from cards import Card
 from input_utils import human_play_logic
 from heuristics import evaluate
 import constants
 from tqdm import tqdm
 from typing import Optional
-
-
 
 class HumanAgent:
     def choose(self, state: GameState) -> Card:
@@ -49,8 +47,8 @@ def fast_opening_play(agent_name: str,
     # — Priority 1: A-spades or A-clubs ——
     acards = [c for c in hand if c.identifier in ("A-spades", "A-clubs")]
     if acards:
-        spades = [c for c in hand if c.category == "spades" and c.identifier not in constants.trumps]
-        clubs  = [c for c in hand if c.category == "clubs"  and c.identifier not in constants.trumps]
+        spades = [c for c in hand if c.category == "spades" and c.identifier not in constants.TRUMPS]
+        clubs  = [c for c in hand if c.category == "clubs"  and c.identifier not in constants.TRUMPS]
         # if fewer safe spades than clubs, lead A-spades, else A-clubs
         if len(spades) <= len(clubs):
             for c in acards:
@@ -62,7 +60,7 @@ def fast_opening_play(agent_name: str,
 
     # — Priority 2: A-hearts if few hearts left ——
     a_hearts     = [c for c in hand if c.identifier == "A-hearts"]
-    colour_hearts = [c for c in hand if c.category == "hearts" and c.identifier not in constants.trumps]
+    colour_hearts = [c for c in hand if c.category == "hearts" and c.identifier not in constants.TRUMPS]
     if a_hearts and len(colour_hearts) <= 2:
         return a_hearts[0]
 
@@ -186,7 +184,7 @@ class DuckFeedMixin:
     Shared logic for mid-trick duck/feed decision, plus team-aware last-player override.
     """
     def _duck_or_feed(self, state: GameState, legal: List[Card]) -> Optional[Card]:
-        num_players = len(constants.players)
+        num_players = len(constants.PLAYERS)
         # determine public Q-club info
         qc_public = {p for t in state.trick_history for p, c in t if c.identifier == 'Q-clubs'}
         qc_public |= {p for p, c in state.current_trick if c.identifier == 'Q-clubs'}
@@ -330,7 +328,7 @@ class MinimaxAgent(DuckFeedMixin, TeamMixin):
         if choice:
             return choice
         # minimax search reach end of current trick by default
-        depth = self.depth if self.depth is not None else (len(constants.players) - len(state.current_trick))
+        depth = self.depth if self.depth is not None else (len(constants.PLAYERS) - len(state.current_trick))
         move, _ = self._minimax(state, depth, True, -math.inf, math.inf)
         return move
 
@@ -394,7 +392,7 @@ class ExpectiMaxAgent(DuckFeedMixin, TeamMixin):
         if choice:
             return choice
         # sampling + minimax
-        depth = self.depth if self.depth is not None else (len(constants.players) - len(state.current_trick))
+        depth = self.depth if self.depth is not None else (len(constants.PLAYERS) - len(state.current_trick))
         best_moves, best_score = [], -math.inf
         # seen = set()
         # for action in tqdm(state.legal_actions(), desc="Root actions", leave=True, disable=True):

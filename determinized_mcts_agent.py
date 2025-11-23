@@ -1,7 +1,7 @@
 import random
 import math
 from game_state import GameState
-from form_deck import Card, create_deck
+from cards import Card, create_deck
 import constants
 
 class DeterminizedMCTSAgent:

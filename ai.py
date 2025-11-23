@@ -44,7 +44,7 @@ class DoppelkopfEnv(gym.Env):
             self.hand_offset  = 0
             self.seen_offset  = hand_size #24
             self.points_offset = hand_size + hand_size #48
-            self.trick_offset  = self.points_offset + len(constants.players) #52
+            self.trick_offset  = self.points_offset + len(constants.PLAYERS) #52
             self.team_flag_offset   = self.trick_offset + 1 #53
             self.partner_offset     = self.team_flag_offset + 1 #54
             self.pos_offset = self.partner_offset + 3 #57; 3 OTHER PLAYERS
@@ -58,7 +58,7 @@ class DoppelkopfEnv(gym.Env):
             self.hand_offset = 0
             self.seen_offset = hand_size  # 24
             self.points_offset = hand_size + hand_size  # 48
-            self.trick_offset = self.points_offset + len(constants.players)  # 52
+            self.trick_offset = self.points_offset + len(constants.PLAYERS)  # 52
             self.team_flag_offset = self.trick_offset + 1  # 53
             self.partner_offset = self.team_flag_offset + 1  # 54
             self.pos_offset = self.partner_offset + 3  # 57; 3 OTHER PLAYERS
@@ -74,7 +74,7 @@ class DoppelkopfEnv(gym.Env):
     def _assign_opponents(self):
         """(Re)randomize opponent types from scratch."""
         self.opponent_agents.clear()
-        for p in constants.players:
+        for p in constants.PLAYERS:
             if p == self.player:
                 continue
             if random.random() < self.expectimax_prob:
@@ -157,7 +157,7 @@ class DoppelkopfEnv(gym.Env):
                 vec[self.seen_offset + idx] += 1
 
         # 3) Points
-        for i, p in enumerate(constants.players):
+        for i, p in enumerate(constants.PLAYERS):
             vec[self.points_offset + i] = state.points[p]
 
         # 4) Trick count
@@ -172,7 +172,7 @@ class DoppelkopfEnv(gym.Env):
         # 6) Partner one-hot (only if self.agent is not None)
         if getattr(self, "agent", None):
             partner_list = self.agent.get_team_members(state)
-            others = [p for p in constants.players if p != self.player]
+            others = [p for p in constants.PLAYERS if p != self.player]
             for i, p in enumerate(others):
                 vec[self.partner_offset + i] = 1 if p in partner_list else 0
         # else: leave those partner slots as 0

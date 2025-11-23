@@ -21,6 +21,7 @@ print(f"Logging to {logfile!r}…")
 dummy_env = DoppelkopfEnv("RUSTY", expectimax_prob=1.0)
 # ppo_model = PPO.load("models/dk_ppo_VEC_61a_minimal_03R.zip")
 ppo_model = PPO.load("models/dk_ppo_mm_single.zip")
+# ppo_model = PPO.load("models/delete_experimental.zip")
 
 agents = {
     "RUSTY": RLWrapper(ppo_model, "RUSTY", dummy_env),
@@ -38,8 +39,8 @@ agents = {
     "ALICE": RandomAgent()
 }
 
-NUM_GAMES = 100
-win_counts = {p: 0 for p in constants.players}
+NUM_GAMES = 10
+win_counts = {p: 0 for p in constants.PLAYERS}
 
 # open a text file for writing in UTF-8
 with open("tournament_results/tournament_results.txt", "w", encoding="utf-8") as fout:
@@ -74,6 +75,6 @@ with open("tournament_results/tournament_results.txt", "w", encoding="utf-8") as
 
     # after all games, print aggregate win-rates
     log("\n=== Tournament results ===")
-    for p in constants.players:
+    for p in constants.PLAYERS:
         pct = win_counts[p] / NUM_GAMES * 100
         log(f"  {p}: {win_counts[p]} wins ({pct:.1f}%)")

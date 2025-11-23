@@ -1,5 +1,5 @@
 import random
-from form_deck import create_deck
+from cards import create_deck
 from game_state import GameState
 from input_utils import get_qc_split_and_points
 import constants
@@ -48,12 +48,12 @@ class RLWrapper:
 # }
 
 def find_first_player():
-    return random.choice(list(constants.players.keys()))
+    return random.choice(constants.PLAYERS)
 
 
 def make_initial_state():
     while True:
-        hands = {player: [] for player in constants.players}
+        hands = {player: [] for player in constants.PLAYERS}
         deck = create_deck()
         for player in hands:
             hands[player] = [deck.pop() for _ in range(12)]
