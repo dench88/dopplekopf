@@ -1,6 +1,8 @@
 import random
 import math
 from typing import List, Optional
+
+from kiwisolver import strength
 from game_state import GameState
 from cards import Card
 from input_utils import human_play_logic
@@ -176,9 +178,6 @@ class TeamMixin:
         # Fallback (should not occur)
         return []
 
-
-
-
 class DuckFeedMixin:
     """
     Shared logic for mid-trick duck/feed decision, plus team-aware last-player override.
@@ -195,11 +194,19 @@ class DuckFeedMixin:
         trick_suit = None
         current_winner = None
         current_strength = -1
+        # if state.current_trick:
+        #     trick_suit = state.current_trick[0][1].category
+        #     current_winner, current_card = max(state.current_trick, key=lambda pc: pc[1].power)
+        #     current_strength = card_strength(current_card, trick_suit)
         if state.current_trick:
             trick_suit = state.current_trick[0][1].category
-            current_winner, current_card = max(state.current_trick, key=lambda pc: pc[1].power)
-            current_strength = card_strength(current_card, trick_suit)
-        
+            def strength(pc):
+                    card = pc[1]
+                    return card.power if (card.category == trick_suit or card.category == "trumps") else -1
+            current_winner, current_card = max(state.current_trick, key=strength)
+            current_strength = strength((current_winner, current_card))
+
+
         # last-player override: feed or win
         if state.current_trick and len(state.current_trick) == num_players - 1 and self.is_team_playing:
             cards_that_are_winners = [c for c in legal if card_strength(c, trick_suit) > current_strength]
@@ -378,7 +385,6 @@ class ExpectiMaxAgent(DuckFeedMixin, TeamMixin):
     def choose(self, state: GameState) -> Card:
         self.update_team_info(state)
         legal = state.legal_actions()
-        # 2) fast opening heuristic
         fast = fast_opening_play(self.name,
                              state.hands,
                              state.trick_history,
@@ -387,26 +393,18 @@ class ExpectiMaxAgent(DuckFeedMixin, TeamMixin):
             if self.verbose:
                 print(f"{self.name} used fast opening rule: {fast.identifier}")
             return fast
-        # duck/feed override
         choice = self._duck_or_feed(state, legal)
         if choice:
             return choice
-        # sampling + minimax
-        depth = self.depth if self.depth is not None else (len(constants.PLAYERS) - len(state.current_trick))
+
+        depth = (len(constants.PLAYERS) - len(state.current_trick)) if self.depth is None else self.depth
         best_moves, best_score = [], -math.inf
-        # seen = set()
-        # for action in tqdm(state.legal_actions(), desc="Root actions", leave=True, disable=True):
-        #     if action.identifier in seen:
-        #         continue
-        #     seen.add(action.identifier)
-        # 0) at the top of choose(), after you’ve determined depth/samples
-        # grab the raw legal actions
-        raw_actions = state.legal_actions()
+        raw_legal_actions = state.legal_actions()
 
         # apply your “no 10-hearts in tricks 1–6 when trick < 20 points” rule
-        actions = []
-        current_trick_pts = sum(c.points for _, c in state.current_trick)
-        for c in raw_actions:
+        adj_legal_actions = []
+        current_trick_pts = sum(card.points for player, card in state.current_trick)
+        for c in raw_legal_actions:
             if (
                 c.identifier == "10-hearts"
                 and len(state.trick_history) < 6
@@ -414,11 +412,11 @@ class ExpectiMaxAgent(DuckFeedMixin, TeamMixin):
             ):
                 # skip it
                 continue
-            actions.append(c)
+            adj_legal_actions.append(c)
 
-        # now use actions instead of state.legal_actions() in your sampling loop
+        # now use updated legal actions 
         seen = set()
-        for action in actions:
+        for action in adj_legal_actions:
             if action.identifier in seen:
                 continue
             seen.add(action.identifier)

@@ -57,7 +57,9 @@ def make_initial_state():
         deck = create_deck()
         for player in hands:
             hands[player] = [deck.pop() for _ in range(12)]
-        # Check that all player hands have more than 2 trumps
+        # Re-deal if anyone got both Q-clubs or if a hand is too weak on trumps
+        if any(sum(1 for card in hand if card.identifier == 'Q-clubs') > 1 for hand in hands.values()):
+            continue
         if all(sum(1 for card in hand if card.category == 'trumps') > 2 for hand in hands.values()):
             break  # Exit loop only if condition is met
 
@@ -98,7 +100,6 @@ def render(state, last_trick):
 
 
 def play_game(state: GameState, agents: dict[str, any], render_func=None):
-
     last_trick = None
     while not state.is_terminal():
         print(f"TRICK {len(state.trick_history)+1}; Ply {len(state.current_trick)+1} of 4")
@@ -170,7 +171,7 @@ if __name__ == "__main__":
         "RUSTY": HumanAgent(),
         "SUSIE": ExpectiMaxAgent("SUSIE"),
         # "RUSTY": ExpectiMaxAgent("RUSTY"),
-        "HARLEM": ExpectiMaxAgent("HARLEM"),
+        "HARLEM": ExpectiMaxAgent("HARLEM", depth=8),
         "ALICE": ExpectiMaxAgent("ALICE"),
         # "ALICE": HeuristicRandomAgent("ALICE"),
         # "RUSTY": rl_agent,

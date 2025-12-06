@@ -38,23 +38,18 @@ class GameState:
         return follow if follow else hand
 
     
-    @classmethod
-    def random_deal(cls):
+
+    def random_deal():
         deck = create_deck()  # returns 48 shuffled Card objects
         players  = constants.PLAYERS             
         hand_size = len(deck) // len(players)
-
         hands = {
             p: tuple(deck[i*hand_size : (i+1)*hand_size])
             for i, p in enumerate(players)
         }
-
         points = {p: 0 for p in players}
-
         next_player = players[0]
-
-        # 5) return a fresh GameState
-        return cls(
+        return GameState(
             hands=hands,
             trick_history=(),
             current_trick=(),
@@ -66,8 +61,8 @@ class GameState:
     def apply_action(self, card: Card) -> "GameState":
         # 1) Mutable copies of everything
         players = constants.PLAYERS
-        hands   = {p: list(h)             for p, h in self.hands.items()}
-        history = [list(tr)              for tr     in self.trick_history]
+        hands   = {p: list(h) for p, h in self.hands.items()}
+        history = [list(tr) for tr in self.trick_history]
         trick   = [*self.current_trick, (self.next_player, card)]
         points  = dict(self.points)
 
